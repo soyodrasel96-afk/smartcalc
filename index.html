@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>SmartCalc BD</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;padding:10px 8px;background:#101827;color:#fff;font-family:system-ui,-apple-system,"Noto Sans Bengali","Segoe UI",sans-serif;
+  display:flex;justify-content:center;align-items:center;min-height:100vh}
+.app{width:100%;max-width:400px;padding:16px;background:#1e293b;border-radius:28px;
+  box-shadow:0 10px 40px rgba(0,0,0,.5);position:relative;overflow:hidden}
+h2{margin:0 0 12px;color:#38bdf8;font-size:22px;text-align:center}
+h2 span{color:#fbbf24}
+button{height:58px;border:0;border-radius:14px;font-size:20px;background:#334155;color:#fff;cursor:pointer;transition:.1s;font-family:inherit}
+button:active{opacity:.6;transform:scale(.96)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#0f172a;
+  padding:5px;border-radius:14px;margin-bottom:12px}
+.tabs button{height:40px;font-size:13px;background:transparent;color:#cbd5e1;padding:0 2px}
+.tabs button.on{background:#2563eb;color:#fff}
+.pane{display:none}.pane.on{display:block}
+.top{display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px}
+.mini{height:32px;padding:0 12px;font-size:13px;border-radius:10px}
+.screen{background:#0f172a;border-radius:14px;padding:14px 16px;margin-bottom:12px;text-align:right;min-height:100px;
+  display:flex;flex-direction:column;justify-content:flex-end}
+#expr{font-size:26px;min-height:34px;word-break:break-all;color:#fff}
+#res{font-size:34px;font-weight:bold;color:#38bdf8;min-height:42px;cursor:pointer}
+#res.err{color:#f87171;animation:sh .3s}
+@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.sci,.buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sci{margin-bottom:9px}
+.sci button{height:42px;font-size:16px;background:#2a3a55}
+.operator{background:#2563eb}
+.clear{background:#dc2626}
+.back{background:#d97706}
+.equal{background:#059669;grid-column:span 4}
+#hist{display:none;position:absolute;inset:0;background:#1e293b;overflow:auto;padding:12px;z-index:5}
+#hist.show{display:block}
+#hist div{padding:10px;border-bottom:1px solid #334155;cursor:pointer}
+#hist small{display:block;color:#94a3b8;word-break:break-all}
+#hist b{color:#38bdf8;font-size:20px}
+#hist .bar{display:flex;justify-content:space-between;border:0;padding:0 0 8px;cursor:default}
+label{display:block;font-size:13px;color:#94a3b8;margin-top:12px}
+.in{width:100%;height:50px;border-radius:12px;border:1px solid #334155;background:#0f172a;
+  color:#fff;font-size:18px;padding:0 12px;margin-top:6px;font-family:inherit;outline:none}
+.in:focus{border-color:#fbbf24;box-shadow:0 0 0 2px #fbbf24}
+select.in{appearance:auto}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.card{background:#0f172a;border-radius:16px;padding:16px;margin-top:16px}
+.big{font-size:32px;font-weight:bold;color:#38bdf8;margin:4px 0 10px;word-break:break-all}
+.line{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #1e293b}
+.line b{color:#fbbf24}
+.pbar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:#334155;margin-top:12px}
+.pbar i{display:block;height:100%}
+.legend{display:flex;justify-content:space-between;font-size:13px;color:#94a3b8;margin-top:8px}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chips button{height:46px;font-size:16px;background:#2a3a55}
+.chips button.on{background:#d97706}
+.swap{width:100%;height:40px;margin-top:10px;font-size:18px;background:#2a3a55}
+#c-out{font-size:28px;font-weight:bold;color:#38bdf8;margin-bottom:8px;word-break:break-all}
+.note{font-size:12px;color:#94a3b8;margin-top:12px;line-height:1.6}
+.wide{width:100%;margin-top:14px;height:50px;font-size:17px;background:#7c3aed}
+input[type=date]{color-scheme:dark}
+</style>
+</head>
+<body>
+<div class="app">
+  <h2>SmartCalc <span>BD</span></h2>
+
+  <div class="tabs">
+    <button class="on" data-t="calc">🔢 ক্যালকুলেটর</button>
+    <button data-t="emi">💰 EMI</button>
+    <button data-t="conv">📐 কনভার্টার</button>
+    <button data-t="pct">％ শতকরা</button>
+    <button data-t="age">🎂 বয়স</button>
+    <button data-t="date">📅 তারিখ</button>
+  </div>
+
+  <!-- ক্যালকুলেটর -->
+  <div class="pane on" id="p-calc">
+    <div class="top">
+      <button class="mini" id="mic">🎤</button>
+      <button class="mini" id="degBtn">DEG</button>
+      <button class="mini" id="histBtn">🕘</button>
+    </div>
+    <div class="screen">
+      <div id="expr">0</div>
+      <div id="res"></div>
+    </div>
+    <div class="sci">
+      <button data-v="sin(">sin</button><button data-v="cos(">cos</button>
+      <button data-v="tan(">tan</button><button data-v="^">x<sup>y</sup></button>
+      <button data-v="log(">log</button><button data-v="ln(">ln</button>
+      <button data-v="√">√</button><button data-v="!">x!</button>
+      <button data-v="π">π</button><button data-v="e">e</button>
+      <button data-v="%">%</button><button data-v="Ans">Ans</button>
+    </div>
+    <div class="buttons">
+      <button class="clear" data-a="ac">AC</button>
+      <button data-v="(">(</button>
+      <button data-v=")">)</button>
+      <button class="back" data-a="del">⌫</button>
+      <button data-v="7">7</button><button data-v="8">8</button>
+      <button data-v="9">9</button><button class="operator" data-v="÷">÷</button>
+      <button data-v="4">4</button><button data-v="5">5</button>
+      <button data-v="6">6</button><button class="operator" data-v="×">×</button>
+      <button data-v="1">1</button><button data-v="2">2</button>
+      <button data-v="3">3</button><button class="operator" data-v="−">−</button>
+      <button data-v="0">0</button><button data-v=".">.</button>
+      <button data-a="neg">±</button><button class="operator" data-v="+">+</button>
+      <button class="equal" data-a="eq">=</button>
+    </div>
+  </div>
+
+  <!-- EMI -->
+  <div class="pane" id="p-emi">
+    <label>ঋণের পরিমাণ (৳)</label>
+    <input class="in" id="e-p" inputmode="decimal" placeholder="যেমন: 500000">
+    <label>বার্ষিক সুদের হার (%)</label>
+    <input class="in" id="e-r" inputmode="decimal" placeholder="যেমন: 12">
+    <label>মেয়াদ</label>
+    <div class="row">
+      <input class="in" id="e-t" inputmode="decimal" placeholder="যেমন: 3" style="margin-top:0">
+      <select class="in" id="e-u" style="margin-top:0">
+        <option value="y">বছর</option><option value="m">মাস</option>
+      </select>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;color:#94a3b8">মাসিক কিস্তি</div>
+      <div class="big" id="e-emi">৳ 0</div>
+      <div class="line"><span>মূল ঋণ</span><b id="e-pr">—</b></div>
+      <div class="line"><span>মোট সুদ</span><b id="e-int">—</b></div>
+      <div class="line"><span>মোট পরিশোধ</span><b id="e-tot">—</b></div>
+      <div class="pbar"><i id="b1" style="background:#38bdf8;width:0"></i><i id="b2" style="background:#fbbf24;width:0"></i></div>
+      <div class="legend"><span>🔵 মূল</span><span>🟡 সুদ</span></div>
+    </div>
+  </div>
+
+  <!-- কনভার্টার -->
+  <div class="pane" id="p-conv">
+    <div class="chips">
+      <button class="on" data-c="land">জমি</button>
+      <button data-c="len">দৈর্ঘ্য</button>
+      <button data-c="wt">ওজন</button>
+    </div>
+    <label>পরিমাণ</label>
+    <input class="in" id="c-v" inputmode="decimal" value="1">
+    <label>থেকে</label>
+    <select class="in" id="c-from"></select>
+    <button class="swap" id="c-swap">⇅</button>
+    <label style="margin-top:4px">এতে</label>
+    <select class="in" id="c-to"></select>
+    <div class="card">
+      <div id="c-out">—</div>
+      <div id="c-list"></div>
+      <div class="note" id="c-note"></div>
+    </div>
+  </div>
+
+  <!-- শতকরা -->
+  <div class="pane" id="p-pct">
+    <label>হিসাবের ধরন</label>
+    <select class="in" id="pc-m">
+      <option value="0">A এর B% কত?</option>
+      <option value="1">A হলো B এর কত %?</option>
+      <option value="2">A থেকে B — কত % বৃদ্ধি/হ্রাস?</option>
+      <option value="3">ছাড় (A টাকায় B% ছাড়)</option>
+      <option value="4">A এর সাথে B% যোগ (ভ্যাট/সুদ)</option>
+    </select>
+    <label id="pc-l1"></label>
+    <input class="in" id="pc-a" inputmode="decimal">
+    <label id="pc-l2"></label>
+    <input class="in" id="pc-b" inputmode="decimal">
+    <button class="wide" id="pc-mic">🎤 বলে ইনপুট দিন</button>
+    <div class="card">
+      <div class="big" id="pc-out">—</div>
+      <div id="pc-det"></div>
+    </div>
+  </div>
+
+  <!-- বয়স -->
+  <div class="pane" id="p-age">
+    <label>জন্মতারিখ</label>
+    <input class="in" type="date" id="a-b">
+    <label>যে তারিখ পর্যন্ত (আজ ডিফল্ট)</label>
+    <input class="in" type="date" id="a-t">
+    <div class="card">
+      <div class="big" id="a-out" style="font-size:22px">—</div>
+      <div id="a-det"></div>
+    </div>
+  </div>
+
+  <!-- তারিখের হিসাব -->
+  <div class="pane" id="p-date">
+    <label>হিসাবের ধরন</label>
+    <select class="in" id="d-m">
+      <option value="0">দুই তারিখের মধ্যে কত দিন?</option>
+      <option value="1">তারিখের পরে (যোগ)</option>
+      <option value="2">তারিখের আগে (বিয়োগ)</option>
+    </select>
+    <label>শুরুর তারিখ</label>
+    <input class="in" type="date" id="d-a">
+    <div id="d-w0">
+      <label>শেষ তারিখ</label>
+      <input class="in" type="date" id="d-b">
+    </div>
+    <div id="d-w1" style="display:none">
+      <label>কত</label>
+      <div class="row">
+        <input class="in" id="d-n" inputmode="numeric" placeholder="যেমন: 90" style="margin-top:0">
+        <select class="in" id="d-u" style="margin-top:0">
+          <option value="d">দিন</option><option value="w">সপ্তাহ</option>
+          <option value="m">মাস</option><option value="y">বছর</option>
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="big" id="d-out" style="font-size:22px">—</div>
+      <div id="d-det"></div>
+    </div>
+  </div>
+
+  <div id="hist"></div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const $$=s=>document.querySelectorAll(s);
+/* বাংলা অঙ্ক ইংরেজিতে রূপান্তর */
+const BN='০১২৩৪৫৬৭৮৯';
+const n=s=>parseFloat(String(s).replace(/[০-৯]/g,d=>BN.indexOf(d)).replace(/,/g,'').trim());
+const fm=(x,d=2)=>Number(x).toLocaleString('en-IN',{maximumFractionDigits:d});
+
+let expr='',deg=true,ans='0',justEq=false,hist=[],tab='calc';
+try{hist=JSON.parse(localStorage.getItem('sc_h')||'[]')}catch(e){}
+
+/* ---------- ট্যাব ---------- */
+$$('.tabs button').forEach(b=>b.onclick=()=>{
+  tab=b.dataset.t;
+  $$('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  $$('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+tab));
+  $('#hist').classList.remove('show');
+});
+
+/* ---------- নিরাপদ গাণিতিক পার্সার ---------- */
+function calc(src){
+  let open=(src.match(/\(/g)||[]).length-(src.match(/\)/g)||[]).length;
+  while(open-->0)src+=')';
+  src=src.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
+  const t=src.match(/\d+\.?\d*|\.\d+|[a-zπ]+|[+\-*\/^%!()√]/gi);
+  if(!t||t.join('')!==src)throw 0;
+  let i=0;const peek=()=>t[i],next=()=>t[i++];
+  const R=x=>deg?x*Math.PI/180:x, D=x=>deg?x*180/Math.PI:x;
+  const F={sin:x=>Math.sin(R(x)),cos:x=>Math.cos(R(x)),tan:x=>Math.tan(R(x)),
+    asin:x=>D(Math.asin(x)),acos:x=>D(Math.acos(x)),atan:x=>D(Math.atan(x)),
+    log:Math.log10,ln:Math.log,sqrt:Math.sqrt,abs:Math.abs};
+  const C={pi:Math.PI,'π':Math.PI,e:Math.E,ans:parseFloat(ans)};
+  const has=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
+  const fact=n=>{if(n<0||n>170||n%1)return NaN;let r=1;for(let k=2;k<=n;k++)r*=k;return r};
+  function ex(){let v=term();while(peek()=='+'||peek()=='-')v=next()=='+'?v+term():v-term();return v}
+  function term(){let v=un();for(;;){const p=peek();
+    if(p=='*'){i++;v*=un()}else if(p=='/'){i++;v/=un()}
+    else if(p&&(p=='('||/^[\d.a-zπ√]/i.test(p)))v*=un();else break}return v}
+  function un(){if(peek()=='-'){i++;return -un()}if(peek()=='+'){i++;return un()}return pw()}
+  function pw(){const b=po();if(peek()=='^'){i++;return Math.pow(b,un())}return b}
+  function po(){let v=pr();while(peek()=='%'||peek()=='!')v=next()=='%'?v/100:fact(v);return v}
+  function pr(){const k=next();if(k===undefined)throw 0;
+    if(/^[\d.]/.test(k))return parseFloat(k);
+    if(k=='('){const v=ex();if(next()!=')')throw 0;return v}
+    if(k=='√')return Math.sqrt(pr());
+    const nm=k.toLowerCase();
+    if(has(F,nm)){if(next()!='(')throw 0;const v=ex();if(next()!=')')throw 0;return F[nm](v)}
+    if(has(C,nm))return C[nm];
+    throw 0}
+  const r=ex();if(i<t.length||!isFinite(r))throw 0;
+  return String(parseFloat(r.toPrecision(12)));
+}
+
+/* ---------- ক্যালকুলেটর ডিসপ্লে ---------- */
+function render(){
+  $('#expr').textContent=expr||'0';
+  const r=$('#res');r.className='';
+  let p='';
+  if(expr){try{p=calc(expr);if(p===expr)p=''}catch(e){}}
+  r.textContent=p;
+}
+function add(v){
+  if(justEq){if(/^[\d.π(e√]|^[a-z]/i.test(v))expr='';justEq=false}
+  const ops='+−×÷^',last=expr.slice(-1);
+  if(ops.includes(v)){
+    if(!expr&&v!=='−')return;
+    if(ops.includes(last)&&v!=='−')expr=expr.slice(0,-1);
+  }
+  if(v==='.'&&expr.split(/[^\d.]/).pop().includes('.'))return;
+  expr+=v;render();
+}
+function equal(){
+  if(!expr)return;
+  try{
+    const r=calc(expr);
+    hist.unshift([expr,r]);hist=hist.slice(0,30);
+    try{localStorage.setItem('sc_h',JSON.stringify(hist))}catch(e){}
+    ans=r;expr=r;justEq=true;
+    $('#expr').textContent=r;$('#res').textContent='';
+  }catch(e){const r=$('#res');r.textContent='ত্রুটি!';r.className='err'}
+}
+function negate(){
+  if(!expr)return;
+  expr=expr.startsWith('−(')&&expr.endsWith(')')?expr.slice(2,-1):'−('+expr+')';
+  justEq=false;render();
+}
+$$('button[data-v]').forEach(b=>b.onclick=()=>add(b.dataset.v));
+$$('button[data-a]').forEach(b=>b.onclick=()=>{
+  const a=b.dataset.a;
+  if(a=='ac'){expr='';justEq=false;render()}
+  else if(a=='del'){
+    expr=expr.replace(/(?:Ans|(?:a?sin|a?cos|a?tan|log|ln|sqrt)\()$|[\s\S]$/,'');
+    justEq=false;render()}
+  else if(a=='eq')equal();
+  else if(a=='neg')negate();
+});
+$('#degBtn').onclick=e=>{deg=!deg;e.target.textContent=deg?'DEG':'RAD';render()};
+$('#res').onclick=()=>{const t=$('#res').textContent;
+  if(t&&navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>{})};
+
+function showHist(){
+  const h=$('#hist');h.innerHTML='';
+  const bar=document.createElement('div');bar.className='bar';
+  const c=document.createElement('button');c.textContent='✕ বন্ধ';
+  c.style.cssText='height:34px;font-size:14px;padding:0 12px';
+  c.onclick=()=>h.classList.remove('show');
+  const d=document.createElement('button');d.textContent='🗑 মুছুন';
+  d.style.cssText='height:34px;font-size:14px;padding:0 12px';
+  d.onclick=()=>{hist=[];try{localStorage.removeItem('sc_h')}catch(e){}showHist()};
+  bar.append(c,d);h.append(bar);
+  if(!hist.length){const p=document.createElement('p');p.textContent='কোনো ইতিহাস নেই';p.style.color='#94a3b8';h.append(p)}
+  hist.forEach(x=>{
+    const row=document.createElement('div');
+    const s=document.createElement('small');s.textContent=x[0];
+    const b=document.createElement('b');b.textContent='= '+x[1];
+    row.append(s,b);
+    row.onclick=()=>{expr=x[1];justEq=true;h.classList.remove('show');render()};
+    h.append(row);
+  });
+  h.classList.add('show');
+}
+$('#histBtn').onclick=showHist;
+
+document.addEventListener('keydown',e=>{
+  if(tab!=='calc')return;
+  const tg=document.activeElement&&document.activeElement.tagName;
+  if(tg==='INPUT'||tg==='SELECT')return;
+  const k=e.key;
+  if(/^[0-9.()!%^+]$/.test(k))add(k);
+  else if(k=='*')add('×');
+  else if(k=='/'){e.preventDefault();add('÷')}
+  else if(k=='-')add('−');
+  else if(k=='Enter'||k=='='){e.preventDefault();equal()}
+  else if(k=='Backspace')$('[data-a=del]').click();
+  else if(k=='Escape')$('[data-a=ac]').click();
+});
+
+/* ---------- EMI ---------- */
+function emi(){
+  const P=n($('#e-p').value),R=n($('#e-r').value);
+  let T=n($('#e-t').value);
+  if($('#e-u').value==='y')T*=12;
+  const reset=()=>{$('#e-emi').textContent='৳ 0';
+    ['#e-pr','#e-int','#e-tot'].forEach(s=>$(s).textContent='—');
+    $('#b1').style.width='0';$('#b2').style.width='0'};
+  if(!(P>0)||!(T>0)||isNaN(R)||R<0)return reset();
+  const r=R/1200;
+  const E=r===0?P/T:P*r*Math.pow(1+r,T)/(Math.pow(1+r,T)-1);
+  if(!isFinite(E))return reset();
+  const tot=E*T,int=tot-P;
+  $('#e-emi').textContent='৳ '+fm(E);
+  $('#e-pr').textContent='৳ '+fm(P);
+  $('#e-int').textContent='৳ '+fm(int);
+  $('#e-tot').textContent='৳ '+fm(tot);
+  const pp=Math.max(0,Math.min(100,P/tot*100));
+  $('#b1').style.width=pp+'%';$('#b2').style.width=(100-pp)+'%';
+}
+['#e-p','#e-r','#e-t'].forEach(s=>$(s).addEventListener('input',emi));
+$('#e-u').addEventListener('change',emi);
+
+/* ---------- ইউনিট কনভার্টার ---------- */
+const U={
+  land:{note:'১ কাঠা = ৭২০ বর্গফুট • ১ শতাংশ = ৪৩৫.৬ বর্গফুট • ১ বিঘা = ২০ কাঠা = ১৪৪০০ বর্গফুট • ১ কাঠা = ১৬ ছটাক • ১ একর = ১০০ শতাংশ। এলাকাভেদে সামান্য পার্থক্য থাকতে পারে।',
+    d:[1,2],u:[['বর্গফুট',1],['শতাংশ',435.6],['কাঠা',720],['ছটাক',45],['বিঘা',14400],
+    ['একর',43560],['বর্গগজ',9],['বর্গমিটার',10.7639104],['হেক্টর',107639.104]]},
+  len:{note:'১ হাত = ১৮ ইঞ্চি • ১ গজ = ৩ ফুট',d:[5,0],
+    u:[['মিটার',1],['সেন্টিমিটার',.01],['মিলিমিটার',.001],['কিলোমিটার',1000],['ইঞ্চি',.0254],
+    ['ফুট',.3048],['গজ',.9144],['হাত',.4572],['মাইল',1609.344]]},
+  wt:{note:'১ মণ = ৪০ সের • ১ সের = ১৬ ছটাক = ৮০ তোলা (প্রায় ৯৩৩ গ্রাম)',d:[0,5],
+    u:[['কেজি',1],['গ্রাম',.001],['টন',1000],['পাউন্ড',.45359237],['আউন্স',.0283495231],
+    ['সের',.933105],['মণ',37.3242],['তোলা',.0116638],['ছটাক',.0583191]]}
+};
+let cat='land';
+function fillCat(){
+  const c=U[cat];
+  ['#c-from','#c-to'].forEach((s,k)=>{
+    const el=$(s);el.innerHTML='';
+    c.u.forEach((x,i)=>{const o=document.createElement('option');o.value=i;o.textContent=x[0];el.append(o)});
+    el.value=c.d[k];
+  });
+  $('#c-note').textContent=c.note;
+  conv();
+}
+function conv(){
+  const c=U[cat],v=n($('#c-v').value);
+  const a=c.u[$('#c-from').value],b=c.u[$('#c-to').value];
+  const out=$('#c-out'),list=$('#c-list');list.innerHTML='';
+  if(isNaN(v)){out.textContent='—';return}
+  const base=v*a[1];
+  out.textContent=fm(base/b[1],6)+' '+b[0];
+  c.u.forEach(x=>{
+    const r=document.createElement('div');r.className='line';
+    const s=document.createElement('span');s.textContent=x[0];
+    const t=document.createElement('b');t.textContent=fm(base/x[1],6);
+    r.append(s,t);list.append(r);
+  });
+}
+$$('.chips button').forEach(b=>b.onclick=()=>{
+  cat=b.dataset.c;
+  $$('.chips button').forEach(x=>x.classList.toggle('on',x===b));
+  fillCat();
+});
+$('#c-v').addEventListener('input',conv);
+$('#c-from').addEventListener('change',conv);
+$('#c-to').addEventListener('change',conv);
+$('#c-swap').onclick=()=>{
+  const f=$('#c-from'),t=$('#c-to'),x=f.value;f.value=t.value;t.value=x;conv();
+};
+
+/* ---------- ভয়েস ইনপুট ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function listen(btn,cb,busy){
+  if(!SR){alert('ভয়েসের জন্য Chrome ব্রাউজারে খুলুন');return}
+  const r=new SR();r.lang='bn-BD';r.interimResults=false;
+  const old=btn.textContent;btn.textContent=busy;
+  const back=()=>{btn.textContent=old};
+  r.onresult=e=>cb(e.results[0][0].transcript);
+  r.onerror=e=>{back();if(e.error==='not-allowed')alert('মাইক্রোফোনের অনুমতি দিন')};
+  r.onend=back;
+  try{r.start()}catch(e){back()}
+}
+function voiceExpr(t){
+  t=t.toLowerCase().replace(/[০-৯]/g,d=>BN.indexOf(d)).replace(/,/g,'');
+  t=t.replace(/(\d+\.?\d*)\s*(এর|of)\s*(\d+\.?\d*)\s*(%|শতাংশ|পার্সেন্ট|percent|per cent)/,'$1×$3%');
+  [[/গুণ|গুন|multiplied by|multiply|times|into|\bx\b|\*/g,'×'],
+   [/ভাগ|divided by|divide|\//g,'÷'],
+   [/যোগ|প্লাস|plus|add/g,'+'],
+   [/বিয়োগ|মাইনাস|minus|subtract|-/g,'−'],
+   [/শতাংশ|পার্সেন্ট|percent|per cent/g,'%'],
+   [/পাই|\bpi\b/g,'π']].forEach(p=>t=t.replace(p[0],p[1]));
+  return t.replace(/[^\d.+−×÷()%π^]/g,'');
+}
+$('#mic').onclick=()=>listen($('#mic'),t=>{
+  const x=voiceExpr(t);
+  if(!x){const r=$('#res');r.textContent='বুঝতে পারিনি: '+t;return}
+  expr=x;justEq=false;render();equal();
+},'…');
+
+/* ---------- শতকরা ---------- */
+const PL=[['সংখ্যা (A)','শতকরা (B %)'],['অংশ (A)','মোট (B)'],
+  ['আগের মান (A)','পরের মান (B)'],['মূল দাম (A)','ছাড় (B %)'],['মূল (A)','যোগ (B %)']];
+function pct(){
+  const m=+$('#pc-m').value,a=n($('#pc-a').value),b=n($('#pc-b').value);
+  $('#pc-l1').textContent=PL[m][0];$('#pc-l2').textContent=PL[m][1];
+  const out=$('#pc-out'),det=$('#pc-det');det.innerHTML='';
+  const row=(k,v)=>{const r=document.createElement('div');r.className='line';
+    const s=document.createElement('span');s.textContent=k;
+    const t=document.createElement('b');t.textContent=v;r.append(s,t);det.append(r)};
+  if(isNaN(a)||isNaN(b)){out.textContent='—';return}
+  if(m==0){const x=a*b/100;out.textContent=fm(x,4);
+    row('A + B%',fm(a+x,4));row('A − B%',fm(a-x,4))}
+  else if(m==1){if(!b){out.textContent='—';return}
+    out.textContent=fm(a/b*100,4)+' %'}
+  else if(m==2){if(!a){out.textContent='—';return}
+    const p=(b-a)/a*100;
+    out.textContent=fm(Math.abs(p),4)+' % '+(p>=0?'বৃদ্ধি':'হ্রাস');
+    row('পার্থক্য',fm(b-a,4))}
+  else if(m==3){out.textContent='৳ '+fm(a*(1-b/100));
+    row('ছাড়ের পরিমাণ','৳ '+fm(a*b/100))}
+  else{out.textContent='৳ '+fm(a*(1+b/100));
+    row('যোগের পরিমাণ','৳ '+fm(a*b/100))}
+}
+['#pc-a','#pc-b'].forEach(s=>$(s).addEventListener('input',pct));
+$('#pc-m').addEventListener('change',pct);
+$('#pc-mic').onclick=()=>listen($('#pc-mic'),t=>{
+  t=t.replace(/[০-৯]/g,d=>BN.indexOf(d)).replace(/,/g,'');
+  const nums=t.match(/\d+\.?\d*/g)||[];
+  if(!nums.length){alert('সংখ্যা অঙ্কে বলুন, যেমন: ৫০০ এর ১৫');return}
+  $('#pc-a').value=nums[0];$('#pc-b').value=nums[1]||'';pct();
+},'🎙️ শুনছি…');
+
+/* ---------- তারিখ হেল্পার ---------- */
+const MON=['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+const WD=['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
+const pad=x=>String(x).padStart(2,'0');
+const toStr=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const pd=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');return m?new Date(+m[1],+m[2]-1,+m[3]):null};
+const dayDiff=(a,b)=>Math.round((b-a)/864e5);
+function ymd(a,b){
+  let y=b.getFullYear()-a.getFullYear(),m=b.getMonth()-a.getMonth(),d=b.getDate()-a.getDate();
+  if(d<0){m--;d+=new Date(b.getFullYear(),b.getMonth(),0).getDate()}
+  if(m<0){y--;m+=12}
+  return {y,m,d};
+}
+const fmtYMD=r=>r.y+' বছর '+r.m+' মাস '+r.d+' দিন';
+const fmtDate=d=>d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear()+' ('+WD[d.getDay()]+')';
+function addM(d,k){
+  const r=new Date(d.getFullYear(),d.getMonth()+k,1);
+  const last=new Date(r.getFullYear(),r.getMonth()+1,0).getDate();
+  r.setDate(Math.min(d.getDate(),last));return r;
+}
+function addRow(box,k,v){
+  const r=document.createElement('div');r.className='line';
+  const s=document.createElement('span');s.textContent=k;
+  const t=document.createElement('b');t.textContent=v;
+  r.append(s,t);box.append(r);
+}
+
+/* ---------- বয়স ক্যালকুলেটর ---------- */
+function age(){
+  const b=pd($('#a-b').value),t=pd($('#a-t').value);
+  const out=$('#a-out'),det=$('#a-det');det.innerHTML='';
+  if(!b||!t){out.textContent='—';return}
+  if(t<b){out.textContent='জন্মতারিখ পরের তারিখের আগে হতে হবে';return}
+  const r=ymd(b,t),days=dayDiff(b,t);
+  out.textContent=fmtYMD(r);
+  addRow(det,'মোট মাস',r.y*12+r.m);
+  addRow(det,'মোট সপ্তাহ',fm(Math.floor(days/7),0));
+  addRow(det,'মোট দিন',fm(days,0));
+  addRow(det,'জন্মবার',WD[b.getDay()]);
+  let nx=new Date(t.getFullYear(),b.getMonth(),b.getDate());
+  if(nx<t)nx=new Date(t.getFullYear()+1,b.getMonth(),b.getDate());
+  const left=dayDiff(t,nx);
+  addRow(det,'পরের জন্মদিন',left===0?'আজই 🎉':left+' দিন পরে');
+}
+['#a-b','#a-t'].forEach(s=>{$(s).addEventListener('input',age);$(s).addEventListener('change',age)});
+
+/* ---------- তারিখের হিসাব ---------- */
+function dt(){
+  const m=+$('#d-m').value;
+  $('#d-w0').style.display=m===0?'block':'none';
+  $('#d-w1').style.display=m===0?'none':'block';
+  const a=pd($('#d-a').value),out=$('#d-out'),det=$('#d-det');det.innerHTML='';
+  if(!a){out.textContent='—';return}
+  if(m===0){
+    const b=pd($('#d-b').value);
+    if(!b){out.textContent='—';return}
+    const swapped=b<a,x=swapped?b:a,y=swapped?a:b;
+    const d=dayDiff(x,y);
+    out.textContent=fm(d,0)+' দিন';
+    addRow(det,'বছর-মাস-দিন',fmtYMD(ymd(x,y)));
+    addRow(det,'সপ্তাহ',Math.floor(d/7)+' সপ্তাহ '+(d%7)+' দিন');
+    addRow(det,'মোট মাস (প্রায়)',fm(d/30.4375,1));
+    if(swapped)addRow(det,'নোট','শেষ তারিখ আগে ছিল, তাই উল্টে হিসাব হয়েছে');
+  }else{
+    const k=Math.trunc(n($('#d-n').value));
+    if(isNaN(k)){out.textContent='—';return}
+    const s=m===1?1:-1,u=$('#d-u').value;
+    let r;
+    if(u==='d')r=new Date(a.getFullYear(),a.getMonth(),a.getDate()+s*k);
+    else if(u==='w')r=new Date(a.getFullYear(),a.getMonth(),a.getDate()+s*k*7);
+    else if(u==='m')r=addM(a,s*k);
+    else r=addM(a,s*k*12);
+    out.textContent=fmtDate(r);
+    addRow(det,'শুরুর তারিখ',fmtDate(a));
+  }
+}
+['#d-a','#d-b','#d-n'].forEach(s=>{$(s).addEventListener('input',dt);$(s).addEventListener('change',dt)});
+['#d-m','#d-u'].forEach(s=>$(s).addEventListener('change',dt));
+$('#a-t').value=toStr(new Date());
+$('#d-a').value=toStr(new Date());
+
+render();fillCat();pct();age();dt();
+</script>
+</body>
+</html>
