@@ -627,6 +627,7 @@ $('#pc-mic').onclick=()=>listen($('#pc-mic'),t=>{
   const nums=t.match(/\d+\.?\d*/g)||[];
   if(!nums.length){alert('সংখ্যা বলুন, যেমন: পাঁচশো এর পনেরো');return}
   $('#pc-a').value=nums[0];$('#pc-b').value=nums[1]||'';pct();
+});
 function parseVoiceInput(transcript) {
     let text = transcript.toLowerCase();
     
