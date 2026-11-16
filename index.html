@@ -627,23 +627,23 @@ $('#pc-mic').onclick=()=>listen($('#pc-mic'),t=>{
   const nums=t.match(/\d+\.?\d*/g)||[];
   if(!nums.length){alert('সংখ্যা বলুন, যেমন: পাঁচশো এর পনেরো');return}
   $('#pc-a').value=nums[0];$('#pc-b').value=nums[1]||'';pct();
-},'🎙️ শুনছি…');function parseVoiceInput(transcript) {
+function parseVoiceInput(transcript) {
     let text = transcript.toLowerCase();
-
+    
     // বাংলা ও ইংরেজি শব্দকে সঠিক গাণিতিক চিহ্নে রূপান্তর
-    text = text.replace(/গুণ|গুন|into|multiplied by|x/g, '*');
-    text = text.replace(/ভাগ|div|divided by/g, '/');
+    text = text.replace(/গুণ|গুন|পূরণ|into|multiply|times/g, '*');
+    text = text.replace(/ভাগ|div|divide|divided by/g, '/');
     text = text.replace(/যোগ|plus/g, '+');
-    text = text.replace(/বিয়োগ|বিয়োগ|minus/g, '-');
-    text = text.replace(/পয়েন্ট|পয়েন্ট|দশমিক|point/g, '.');
-
-    // বাংলা সংখ্যা থাকলে সেগুলোকে ইংরেজি সংখ্যায় রূপান্তর
+    text = text.replace(/বিয়োগ|বিয়োগ|minus/g, '-');
+    text = text.replace(/পয়েণ্ট|পয়েন্ট|দশমিক|point/g, '.');
+    
+    // বাংলা সংখ্যা থাকলে সেগুলোকে ইংরেজি সংখ্যায় রূপান্তর
     const banglaNumbers = {'০':'0', '১':'1', '২':'2', '৩':'3', '৪':'4', '৫':'5', '৬':'6', '৭':'7', '৮':'8', '৯':'9'};
     text = text.replace(/[০-৯]/g, char => banglaNumbers[char]);
-
-    // গাণিতিক সংকেত ও সংখ্যা ছাড়া অন্য কোনো উল্টাপাল্টা শব্দ থাকলে তা বাদ দেওয়া
+    
+    // গাণিতিক সংকেত ও সংখ্যা ছাড়া অন্য কোনো উল্টাপাল্টা লেখা মুছে ফেলা
     text = text.replace(/[^0-9+\-*/.]/g, '');
-
+    
     return text;
 }
 
