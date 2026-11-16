@@ -575,7 +575,58 @@ function dt(){
 $('#a-t').value=toStr(new Date());
 $('#d-a').value=toStr(new Date());
 
-render();fillCat();pct();age();dt();
+render();fillCat();pct();age();dt();/* ===== বাংলা সংখ্যা-শব্দ ভয়েস সাপোর্ট ===== */
+const nz=s=>s.normalize('NFC');
+const SMW='শূন্য এক দুই তিন চার পাঁচ ছয় সাত আট নয় দশ এগারো বারো তেরো চৌদ্দ পনেরো ষোলো সতেরো আঠারো উনিশ বিশ একুশ বাইশ তেইশ চব্বিশ পঁচিশ ছাব্বিশ সাতাশ আটাশ ঊনত্রিশ ত্রিশ একত্রিশ বত্রিশ তেত্রিশ চৌত্রিশ পঁয়ত্রিশ ছত্রিশ সাঁইত্রিশ আটত্রিশ ঊনচল্লিশ চল্লিশ একচল্লিশ বিয়াল্লিশ তেতাল্লিশ চুয়াল্লিশ পঁয়তাল্লিশ ছেচল্লিশ সাতচল্লিশ আটচল্লিশ ঊনপঞ্চাশ পঞ্চাশ একান্ন বায়ান্ন তিপ্পান্ন চুয়ান্ন পঞ্চান্ন ছাপ্পান্ন সাতান্ন আটান্ন ঊনষাট ষাট একষট্টি বাষট্টি তেষট্টি চৌষট্টি পঁয়ষট্টি ছেষট্টি সাতষট্টি আটষট্টি ঊনসত্তর সত্তর একাত্তর বাহাত্তর তিয়াত্তর চুয়াত্তর পঁচাত্তর ছিয়াত্তর সাতাত্তর আটাত্তর ঊনআশি আশি একাশি বিরাশি তিরাশি চুরাশি পঁচাশি ছিয়াশি সাতাশি আটাশি ঊননব্বই নব্বই একানব্বই বিরানব্বই তিরানব্বই চুরানব্বই পঁচানব্বই ছিয়ানব্বই সাতানব্বই আটানব্বই নিরানব্বই'.split(' ');
+const SM=new Map();
+SMW.forEach((w,i)=>SM.set(nz(w),i));
+Object.entries({জিরো:0,দুটি:2,পাচ:5,এগার:11,তের:13,পনের:15,ষোল:16,সতের:17,আঠার:18,ঊনিশ:19,বিষ:20,বিস:20,পচিশ:25,উনত্রিশ:29,তিরিশ:30,উনচল্লিশ:39,উনপঞ্চাশ:49,উনষাট:59,উনসত্তর:69,উনআশি:79,উননব্বই:89})
+  .forEach(([w,v])=>SM.set(nz(w),v));
+const MU=new Map([['শো',100],['শত',100],['শ',100],['হাজার',1000],['লাখ',1e5],['লক্ষ',1e5],['কোটি',1e7]].map(([k,v])=>[nz(k),v]));
+const MR=new RegExp('^(.+?)('+[...MU.keys()].sort((a,b)=>b.length-a.length).join('|')+')$');
+
+function words2num(t){
+  const fl=[];
+  nz(t).split(/\s+/).filter(Boolean).forEach(w=>{
+    if(SM.has(w)||MU.has(w)||/^[\d.]/.test(w)){fl.push(w);return}
+    const m=w.match(MR);
+    if(m&&SM.has(m[1]))fl.push(m[1],m[2]);else fl.push(w);
+  });
+  let s='',tot=0,cur=0,act=false,dec=false;
+  const flush=()=>{if(act){s+=' '+(tot+cur);tot=cur=0;act=false}};
+  for(const w of fl){
+    if(w===nz('দশমিক')||w===nz('পয়েন্ট')||w==='point'){flush();s+=/\d$/.test(s)?'.':' 0.';dec=true;continue}
+    if(dec&&SM.has(w)&&SM.get(w)<10){s+=SM.get(w);continue}
+    if(dec&&/^\d+$/.test(w)){s+=w;continue}
+    dec=false;
+    if(SM.has(w)){cur+=SM.get(w);act=true}
+    else if(MU.has(w)){const v=MU.get(w);
+      if(v===100)cur=(cur||1)*100;else{tot+=(cur||1)*v;cur=0}
+      act=true}
+    else{flush();s+=' '+w}
+  }
+  flush();return s.trim();
+}
+
+function voiceExpr(t){
+  t=words2num(nz(t).toLowerCase().replace(/[০-৯]/g,d=>BN.indexOf(d)).replace(/,/g,''));
+  t=t.replace(/(\d+\.?\d*)\s*(এর|of)\s*(\d+\.?\d*)\s*(%|শতাংশ|পার্সেন্ট|percent|per cent)/,'$1×$3%');
+  [[nz('বিয়োগ|মাইনাস')+'|minus|subtract|-','−'],
+   [nz('গুণ|গুন')+'|multiplied by|multiply|times|into|\\bx\\b|\\*','×'],
+   [nz('ভাগ')+'|divided by|divide|\\/','÷'],
+   [nz('যোগ|প্লাস')+'|plus|add','+'],
+   [nz('শতাংশ|পার্সেন্ট')+'|percent|per cent','%'],
+   [nz('পাই')+'|\\bpi\\b','π']
+  ].forEach(p=>t=t.replace(new RegExp(p[0],'g'),p[1]));
+  return t.replace(/[^\d.+−×÷()%π^]/g,'');
+}
+
+$('#pc-mic').onclick=()=>listen($('#pc-mic'),t=>{
+  t=words2num(nz(t).replace(/[০-৯]/g,d=>BN.indexOf(d)).replace(/,/g,''));
+  const nums=t.match(/\d+\.?\d*/g)||[];
+  if(!nums.length){alert('সংখ্যা বলুন, যেমন: পাঁচশো এর পনেরো');return}
+  $('#pc-a').value=nums[0];$('#pc-b').value=nums[1]||'';pct();
+},'🎙️ শুনছি…');
 </script>
 </body>
 </html>
