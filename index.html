@@ -647,7 +647,12 @@ function parseVoiceInput(transcript) {
     
     return text;
 }
-
+function ymd(a,b){
+  let mons=(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth());
+  if(addM(a,mons)>b)mons--;
+  const t=addM(a,mons);
+  return {y:Math.floor(mons/12),m:mons%12,d:dayDiff(t,b)};
+}
 </script>
 </body>
 </html>
