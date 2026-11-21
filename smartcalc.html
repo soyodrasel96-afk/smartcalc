@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>SmartCalc BD</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;padding:10px 8px;background:#101827;color:#fff;font-family:system-ui,-apple-system,"Noto Sans Bengali","Segoe UI",sans-serif;
@@ -63,6 +64,55 @@ select.in{appearance:auto}
 .note{font-size:12px;color:#94a3b8;margin-top:12px;line-height:1.6}
 .wide{width:100%;margin-top:14px;height:50px;font-size:17px;background:#7c3aed}
 input[type=date]{color-scheme:dark}
+
+/* ===================================================
+   শুভেচ্ছা কার্ড (বয়স ট্যাব থেকে খোলে) — সব স্টাইল #gc এর ভেতরে সীমাবদ্ধ
+   =================================================== */
+#gc{--bg1:#120f2b;--bg2:#2a1a5e;--bg3:#4d2060;--card:rgba(255,255,255,.08);--text:#fff;--accent:#ffd98a;--accent2:#7fe0d0;--border:rgba(255,255,255,.18);
+  display:none;position:fixed;inset:0;z-index:50;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;
+  color:var(--text);background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%,var(--bg3));
+  font-family:'Hind Siliguri',system-ui,sans-serif;text-align:left}
+#gc.on{display:block}
+#gc[data-theme="light"]{--bg1:#fff6ea;--bg2:#ffe3f0;--bg3:#e5e0ff;--card:rgba(255,255,255,.7);--text:#2b2140;--accent:#c2410c;--accent2:#0f766e;--border:rgba(0,0,0,.12)}
+#gc[data-theme="color"]{--bg1:#0f766e;--bg2:#2563eb;--bg3:#db2777;--card:rgba(255,255,255,.16);--text:#fff;--accent:#fde68a;--accent2:#a7f3d0;--border:rgba(255,255,255,.3)}
+#gc button{height:auto;transition:none;font-family:inherit}
+#gc #g-confetti{position:fixed;inset:0;pointer-events:none;z-index:5;width:100%;height:100%}
+#gc .gapp{width:100%;max-width:460px;margin:0 auto;padding-top:44px;position:relative;z-index:2}
+#gc .gscreen{display:none;animation:gfade .6s ease}
+#gc .gscreen.on{display:block}
+@keyframes gfade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+#gc .gcard{background:var(--card);border:1px solid var(--border);border-radius:28px;padding:22px 18px;backdrop-filter:blur(10px);box-shadow:0 10px 40px rgba(0,0,0,.25)}
+#gc h2{font-size:22px;text-align:center;margin:0 0 4px;color:var(--accent)}
+#gc .sub{text-align:center;opacity:.8;font-size:14px;margin-bottom:16px}
+#gc label{display:block;font-size:14px;margin:12px 0 5px;opacity:.9;color:inherit}
+#gc input,#gc select{width:100%;height:auto;margin:0;padding:13px 14px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,.1);color:var(--text);font:inherit;font-size:16px;outline:none}
+#gc select option{color:#222}
+#gc input:focus,#gc select:focus{border-color:var(--accent);box-shadow:none}
+#gc .btn{display:block;width:100%;margin-top:18px;padding:14px;border:0;border-radius:16px;font-size:17px;font-weight:600;color:#2b1a05;background:linear-gradient(135deg,#ffd98a,#ffb35c);cursor:pointer}
+#gc .btn.ghost{background:var(--card);color:var(--text);border:1px solid var(--border);margin-top:10px;font-size:15px;padding:11px}
+#gc .credit{text-align:center;font-size:13px;opacity:.75;margin:16px 0 4px}
+#gc .credit b{color:var(--accent)}
+#gc .hero{position:relative;height:150px;display:flex;align-items:center;justify-content:center}
+#gc .ring{position:absolute;width:190px;height:70px;border:1.5px dashed var(--accent);border-radius:50%;animation:gspin 8s linear infinite;opacity:.8}
+#gc .ring.r2{width:130px;height:46px;border-color:var(--accent2);animation-duration:5s;animation-direction:reverse}
+@keyframes gspin{to{transform:rotate(360deg)}}
+@keyframes gfloat{50%{transform:translateY(-12px) scale(1.05)}}
+#gc .gbig{font-size:84px;margin:0;color:inherit;filter:drop-shadow(0 8px 14px rgba(0,0,0,.35));animation:gfloat 2.8s ease-in-out infinite;z-index:1}
+#gc .photo{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);box-shadow:0 0 24px rgba(255,217,138,.5);z-index:1;display:none}
+#gc .rname{text-align:center;font-size:30px;font-weight:700;color:var(--accent);line-height:1.25;margin-top:6px;word-break:break-word}
+#gc .rtitle{text-align:center;font-size:26px;font-weight:700;line-height:1.3}
+#gc .gage{text-align:center;opacity:.9;margin:8px 0 14px;font-size:17px}
+#gc .sec{color:var(--accent);font-weight:600;margin:14px 4px 8px}
+#gc .bubble{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:13px 15px;margin-bottom:10px;font-size:17px;line-height:1.65}
+#gc .next{text-align:center;color:var(--accent);margin:14px 0 4px;font-size:16px}
+#gc .from{text-align:center;opacity:.8;font-size:14px;margin-top:6px}
+#gc .share{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+#gc .share button{padding:11px 6px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:15px;cursor:pointer}
+#gc .gtoolbar{position:fixed;top:10px;right:10px;z-index:9;display:flex;gap:8px}
+#gc .gtoolbar button{width:42px;height:42px;padding:0;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:19px;cursor:pointer;backdrop-filter:blur(8px)}
+#gc .gback{position:fixed;top:10px;left:10px;z-index:9;height:42px;padding:0 16px;border-radius:21px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:15px;cursor:pointer;backdrop-filter:blur(8px)}
+#gc .gtoast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:10px 18px;border-radius:20px;font-size:14px;opacity:0;transition:.3s;z-index:20;pointer-events:none}
+#gc .gtoast.on{opacity:1}
 </style>
 </head>
 <body>
@@ -228,6 +278,7 @@ input[type=date]{color-scheme:dark}
       <div class="big" id="a-out" style="font-size:22px">—</div>
       <div id="a-det"></div>
     </div>
+    <button class="wide" id="openCard">🎁 শুভেচ্ছা কার্ড বানান</button>
   </div>
 
   <!-- তারিখের হিসাব -->
@@ -288,6 +339,83 @@ input[type=date]{color-scheme:dark}
   </div>
 
   <div id="hist"></div>
+</div>
+
+<!-- ===== শুভেচ্ছা কার্ড (পুরো স্ক্রিন, বয়স ট্যাবের বাটন থেকে খোলে) ===== -->
+<div id="gc" data-theme="dark">
+  <canvas id="g-confetti"></canvas>
+  <button class="gback" id="g-back">← ফিরে যান</button>
+  <div class="gtoolbar">
+    <button id="g-musicBtn" title="মিউজিক">🔇</button>
+    <button id="g-themeBtn" title="থিম">🎨</button>
+  </div>
+
+  <div class="gapp">
+    <!-- ফর্ম -->
+    <section id="g-formScreen" class="gscreen on">
+      <div class="gcard">
+        <h2>🎁 শুভেচ্ছা কার্ড বানান</h2>
+        <p class="sub">নাম লিখুন, বাকিটা আমরা সাজিয়ে দেব</p>
+
+        <label for="g-occ">উপলক্ষ</label>
+        <select id="g-occ">
+          <option value="birthday">🎂 জন্মদিন</option>
+          <option value="anniversary">💍 বিবাহবার্ষিকী</option>
+          <option value="eid">🌙 ঈদ মোবারক</option>
+          <option value="newyear">🎊 নববর্ষ</option>
+          <option value="valentine">❤️ ভালোবাসা দিবস</option>
+        </select>
+
+        <label for="g-name" id="g-nameLabel">যার জন্মদিন, তার নাম</label>
+        <input id="g-name" type="text" placeholder="এখানে নাম লিখুন" maxlength="40" autocomplete="off">
+
+        <div id="g-dobBox">
+          <label for="g-dob" id="g-dobLabel">জন্মতারিখ</label>
+          <input id="g-dob" type="date">
+        </div>
+
+        <label for="g-photo">ছবি (ঐচ্ছিক)</label>
+        <input id="g-photo" type="file" accept="image/*">
+
+        <button class="btn" id="g-makeBtn">🎉 শুভেচ্ছা দেখুন</button>
+        <div class="credit">ডিজাইন: <b>মোঃ রাসেল মিয়া</b></div>
+      </div>
+    </section>
+
+    <!-- ফলাফল -->
+    <section id="g-resultScreen" class="gscreen">
+      <div class="gcard" id="g-cardEl">
+        <div class="hero">
+          <div class="ring"></div><div class="ring r2"></div>
+          <div class="gbig" id="g-bigIcon">🎂</div>
+          <img class="photo" id="g-photoEl" alt="">
+        </div>
+        <div class="rname" id="g-rName"></div>
+        <div class="rtitle" id="g-rTitle"></div>
+        <div class="gage" id="g-rAge"></div>
+
+        <div class="sec">🌟 শুভকামনা</div>
+        <div id="g-wishes"></div>
+
+        <div class="sec">🤲 দোয়া</div>
+        <div id="g-duas"></div>
+
+        <div class="next" id="g-rNext"></div>
+        <div class="from">শুভেচ্ছা জানিয়েছেন <b>মোঃ রাসেল মিয়া</b></div>
+
+        <div class="share">
+          <button id="g-shWa">💬 WhatsApp</button>
+          <button id="g-shFb">📘 Messenger/FB</button>
+          <button id="g-shNative">📤 শেয়ার</button>
+          <button id="g-shCopy">🔗 লিংক কপি</button>
+        </div>
+        <button class="btn ghost" id="g-dlBtn">🖼️ ছবি হিসেবে ডাউনলোড</button>
+        <button class="btn ghost" id="g-againBtn">▶ আবার দেখুন</button>
+        <button class="btn ghost" id="g-newBtn">✏️ নতুন কার্ড বানান</button>
+      </div>
+    </section>
+  </div>
+  <div class="gtoast" id="g-toast"></div>
 </div>
 
 <!-- ===== কোর: বাংলা/ইংরেজি ভয়েস পার্সার (DOM-মুক্ত) ===== -->
@@ -879,6 +1007,235 @@ $('#a-t').value=toStr(new Date());
 $('#d-a').value=toStr(new Date());
 
 render();fillCat();pct();age();dt();emi();intr();pl();bmi();wd();
+</script>
+
+<!-- ===== শুভেচ্ছা কার্ডের স্ক্রিপ্ট (আলাদা স্কোপে, ক্যালকুলেটরের সাথে সংঘর্ষ হবে না) ===== -->
+<script>
+(function(){
+const CREATOR = "মোঃ রাসেল মিয়া";
+const root = document.getElementById("gc");
+const $ = id => document.getElementById("g-" + id);
+const bnum = n => String(n).replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[d]);
+
+const OCC = {
+  birthday:{icon:"🎂",title:"জন্মদিনের শুভেচ্ছা",nameLabel:"যার জন্মদিন, তার নাম",dob:"জন্মতারিখ",
+    wishes:["আপনার জীবন হোক আনন্দ, সুখ আর সাফল্যে ভরপুর।","পরিবার, কাজ আর মনের শান্তিতে ভরে উঠুক প্রতিটি দিন।","আজকের দিনটা হোক হাসি আর ভালোবাসায় ভরা, স্বপ্নগুলো সত্যি হোক।","নতুন বছরে আসুক নতুন সুযোগ আর অফুরান খুশি।"],
+    duas:["মহান আল্লাহ আপনার রিজিকে বরকত দিন এবং সব কাজ সহজ করে দিন।","দুনিয়া ও আখিরাতের সব কল্যাণ আপনাকে নসিব করুন। আমিন।","আল্লাহ আপনাকে সুস্থ রাখুন এবং দীর্ঘ নেক হায়াত দান করুন। আমিন।"]},
+  anniversary:{icon:"💍",title:"বিবাহবার্ষিকীর শুভেচ্ছা",nameLabel:"দম্পতির নাম",dob:"বিয়ের তারিখ",
+    wishes:["আপনাদের ভালোবাসা দিনে দিনে আরও গভীর হোক।","একসাথে পথ চলা হোক সুখ আর শান্তির।","আপনাদের সংসার ভরে উঠুক হাসি আর আনন্দে।"],
+    duas:["আল্লাহ আপনাদের দাম্পত্য জীবনে বরকত দান করুন। আমিন।","আপনাদের মধ্যে ভালোবাসা ও মায়া চিরস্থায়ী হোক। আমিন।"]},
+  eid:{icon:"🌙",title:"ঈদ মোবারক",nameLabel:"যাকে শুভেচ্ছা জানাবেন",dob:"",
+    wishes:["আপনার ও পরিবারের সবার জন্য ঈদের অনেক অনেক শুভেচ্ছা।","ঈদের আনন্দ ছড়িয়ে পড়ুক সবার ঘরে ঘরে।","এই ঈদ আনুক নতুন আশা আর সুখের বার্তা।"],
+    duas:["আল্লাহ আমাদের সকল ইবাদত কবুল করুন। আমিন।","তাকাব্বালাল্লাহু মিন্না ওয়া মিনকুম।"]},
+  newyear:{icon:"🎊",title:"শুভ নববর্ষ",nameLabel:"যাকে শুভেচ্ছা জানাবেন",dob:"",
+    wishes:["নতুন বছর আনুক নতুন স্বপ্ন আর সাফল্য।","পুরোনো দুঃখ ভুলে নতুন করে শুরু হোক পথচলা।","সুখ, শান্তি আর সমৃদ্ধিতে ভরে উঠুক সামনের দিনগুলো।"],
+    duas:["আল্লাহ নতুন বছরটা আমাদের জন্য কল্যাণময় করুন। আমিন।","সব বিপদ-আপদ থেকে আল্লাহ আপনাকে হেফাজত করুন। আমিন।"]},
+  valentine:{icon:"❤️",title:"ভালোবাসা দিবসের শুভেচ্ছা",nameLabel:"প্রিয় মানুষের নাম",dob:"",
+    wishes:["আপনার জীবন ভরে থাকুক ভালোবাসা আর মায়ায়।","প্রিয় মানুষের পাশে কাটুক প্রতিটি সুন্দর মুহূর্ত।","ভালোবাসা হোক আপনার সবচেয়ে বড় শক্তি।"],
+    duas:["আল্লাহ আপনাদের সম্পর্কে বরকত দিন। আমিন।","হৃদয়ে শান্তি আর ভালোবাসা সবসময় থাকুক। আমিন।"]}
+};
+
+let data = {}, curWishes = [], curDuas = [], photoURL = "";
+
+/* ---------- খোলা / বন্ধ ---------- */
+function openCard(){
+  const b = document.getElementById("a-b").value;
+  if(b && !$("dob").value) $("dob").value = b;
+  root.classList.add("on");
+  root.scrollTop = 0;
+}
+function closeCard(){ root.classList.remove("on") }
+document.getElementById("openCard").addEventListener("click", openCard);
+$("back").addEventListener("click", closeCard);
+
+/* ---------- screens ---------- */
+function show(id){
+  root.querySelectorAll(".gscreen").forEach(s=>s.classList.remove("on"));
+  $(id).classList.add("on");
+  root.scrollTop = 0;
+}
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),1800)}
+
+/* ---------- form ---------- */
+function updateForm(){
+  const o = OCC[$("occ").value];
+  $("nameLabel").textContent = o.nameLabel;
+  $("dobBox").style.display = o.dob ? "block" : "none";
+  $("dobLabel").textContent = o.dob;
+}
+$("occ").addEventListener("change", updateForm);
+
+$("photo").addEventListener("change", e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=()=>{photoURL=r.result}; r.readAsDataURL(f);
+});
+
+$("makeBtn").addEventListener("click", ()=>{
+  const name = $("name").value.trim();
+  if(!name){toast("আগে নাম লিখুন");$("name").focus();return}
+  data = {name, occ:$("occ").value, dob:$("dob").value};
+  pickText(); render(true);
+});
+
+/* ---------- logic ---------- */
+function pickText(){
+  const o = OCC[data.occ];
+  curWishes = [...o.wishes].sort(()=>Math.random()-.5).slice(0,2);
+  curDuas = [...o.duas].sort(()=>Math.random()-.5).slice(0,2);
+}
+function calcAge(dobStr){
+  const d = new Date(dobStr), now = new Date();
+  if(isNaN(d)) return null;
+  let y = now.getFullYear()-d.getFullYear(), m = now.getMonth()-d.getMonth();
+  if(now.getDate()<d.getDate()) m--;
+  if(m<0){y--;m+=12}
+  let next = new Date(now.getFullYear(), d.getMonth(), d.getDate());
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if(next<today) next = new Date(now.getFullYear()+1, d.getMonth(), d.getDate());
+  const days = Math.round((next-today)/864e5);
+  return {y,m,days};
+}
+function render(fire){
+  const o = OCC[data.occ];
+  $("bigIcon").textContent = o.icon;
+  $("rName").textContent = data.name;
+  $("rTitle").textContent = o.title;
+  $("wishes").innerHTML = curWishes.map(t=>`<div class="bubble">${t}</div>`).join("");
+  $("duas").innerHTML = curDuas.map(t=>`<div class="bubble">${t}</div>`).join("");
+
+  $("rAge").textContent = ""; $("rNext").textContent = "";
+  const c = data.dob ? calcAge(data.dob) : null;
+  if(c){
+    if(data.occ==="birthday"){
+      $("rAge").textContent = `আপনি জীবনের ${bnum(c.y)} বছর ${bnum(c.m)} মাস পার করেছেন`;
+      $("rNext").textContent = c.days===0 ? "🎈 আজই আপনার জন্মদিন!" : `🎈 পরের জন্মদিনে আর ${bnum(c.days)} দিন বাকি`;
+    } else if(data.occ==="anniversary"){
+      $("rAge").textContent = `আপনাদের ${bnum(c.y)} বছর ${bnum(c.m)} মাসের পথচলা`;
+      $("rNext").textContent = c.days===0 ? "💖 আজই আপনাদের বিবাহবার্ষিকী!" : `💖 পরের বার্ষিকীতে আর ${bnum(c.days)} দিন বাকি`;
+    }
+  }
+  const img = $("photoEl");
+  if(photoURL){img.src=photoURL;img.style.display="block";$("bigIcon").style.display="none"}
+  else{img.style.display="none";$("bigIcon").style.display="block"}
+  show("resultScreen");
+  if(fire) burst();
+  playTune();
+}
+
+$("againBtn").addEventListener("click", ()=>{pickText();render(true)});
+$("newBtn").addEventListener("click", ()=>{history.replaceState(null,"",location.pathname);show("formScreen")});
+
+/* ---------- share ---------- */
+function link(){
+  const p = new URLSearchParams({name:data.name,occ:data.occ});
+  if(data.dob) p.set("dob",data.dob);
+  return location.origin + location.pathname + "?" + p.toString();
+}
+function msg(){return `${data.name}, ${OCC[data.occ].title}! ${OCC[data.occ].icon}\n${curWishes[0]}\n\n— ${CREATOR}\n`}
+$("shWa").onclick = ()=>window.open("https://wa.me/?text="+encodeURIComponent(msg()+link()),"_blank");
+$("shFb").onclick = ()=>window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(link()),"_blank");
+$("shNative").onclick = async ()=>{
+  if(navigator.share){try{await navigator.share({title:OCC[data.occ].title,text:msg(),url:link()})}catch(e){}}
+  else{copy(msg()+link())}
+};
+$("shCopy").onclick = ()=>copy(link());
+function copy(t){
+  if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>toast("লিংক কপি হয়েছে ✓"))}
+  else{const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove();toast("লিংক কপি হয়েছে ✓")}
+}
+
+/* ---------- PNG download ---------- */
+$("dlBtn").onclick = async ()=>{
+  try{await document.fonts.load("700 40px 'Hind Siliguri'");await document.fonts.load("400 30px 'Hind Siliguri'")}catch(e){}
+  const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  const cs=getComputedStyle(root);
+  const g=x.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,cs.getPropertyValue("--bg1").trim());g.addColorStop(.55,cs.getPropertyValue("--bg2").trim());g.addColorStop(1,cs.getPropertyValue("--bg3").trim());
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  const col=cs.getPropertyValue("--text").trim(), acc=cs.getPropertyValue("--accent").trim();
+  x.textAlign="center";
+  const finish=()=>{
+    x.fillStyle=acc;x.font="700 82px 'Hind Siliguri'";wrap(data.name,W/2,640,900,96);
+    x.fillStyle=col;x.font="700 60px 'Hind Siliguri'";x.fillText(OCC[data.occ].title,W/2,790);
+    x.font="400 42px 'Hind Siliguri'";x.globalAlpha=.92;
+    wrap(curWishes[0],W/2,890,880,62);
+    wrap(curDuas[0],W/2,1070,880,62);
+    x.globalAlpha=1;x.fillStyle=acc;x.font="500 36px 'Hind Siliguri'";
+    x.fillText("— "+CREATOR,W/2,1270);
+    const a=document.createElement("a");a.download="shuvechha-card.png";a.href=c.toDataURL("image/png");a.click();toast("ছবি ডাউনলোড হচ্ছে");
+  };
+  function wrap(t,cx,y,max,lh){
+    const words=t.split(" ");let line="",ly=y;
+    for(const w of words){const test=line+w+" ";if(x.measureText(test).width>max&&line){x.fillText(line.trim(),cx,ly);line=w+" ";ly+=lh}else line=test}
+    x.fillText(line.trim(),cx,ly);
+  }
+  if(photoURL){
+    const im=new Image();im.onload=()=>{
+      x.save();x.beginPath();x.arc(W/2,330,170,0,Math.PI*2);x.clip();
+      const s=Math.max(340/im.width,340/im.height);x.drawImage(im,W/2-im.width*s/2,330-im.height*s/2,im.width*s,im.height*s);x.restore();
+      x.lineWidth=8;x.strokeStyle=acc;x.beginPath();x.arc(W/2,330,170,0,Math.PI*2);x.stroke();finish()};
+    im.src=photoURL;
+  }else{x.font="260px serif";x.fillText(OCC[data.occ].icon,W/2,420);finish()}
+};
+
+/* ---------- theme ---------- */
+const themes=["dark","light","color"];let ti=0;
+try{ti=Math.max(0,themes.indexOf(localStorage.getItem("gc_theme")))}catch(e){}
+function applyTheme(){root.setAttribute("data-theme",themes[ti]);try{localStorage.setItem("gc_theme",themes[ti])}catch(e){}}
+$("themeBtn").onclick=()=>{ti=(ti+1)%3;applyTheme();toast(["গাঢ় থিম","হালকা থিম","রঙিন থিম"][ti])};
+applyTheme();
+
+/* ---------- music (Web Audio) ---------- */
+let ac=null,musicOn=false,playing=false;
+const N={C:261.63,D:293.66,E:329.63,F:349.23,G:392,A:440,C2:523.25};
+const tune=[["G",.4],["G",.2],["A",.6],["G",.6],["C2",.6],["E",1.1],["G",.4],["G",.2],["A",.6],["G",.6],["D",.6],["C",1.1]];
+function playTune(){
+  if(!musicOn||playing) return;
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==="suspended") ac.resume();
+    playing=true;let t=ac.currentTime+.05;
+    tune.forEach(([nt,d])=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.type="triangle";o.frequency.value=N[nt];
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.12,t+.03);g.gain.exponentialRampToValueAtTime(.001,t+d*.95);
+      o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+d);t+=d;
+    });
+    setTimeout(()=>playing=false,(t-ac.currentTime)*1000);
+  }catch(e){}
+}
+$("musicBtn").onclick=()=>{
+  musicOn=!musicOn;$("musicBtn").textContent=musicOn?"🔊":"🔇";
+  if(musicOn&&$("resultScreen").classList.contains("on")) playTune();
+};
+
+/* ---------- confetti ---------- */
+const cv=$("confetti"),cctx=cv.getContext("2d");let parts=[],raf=null;
+function size(){cv.width=innerWidth;cv.height=innerHeight}size();addEventListener("resize",size);
+function burst(){
+  size();
+  const cols=["#ffd98a","#7fe0d0","#ff7aa2","#9b8cff","#5cc8ff","#ffb35c"];
+  for(let i=0;i<120;i++)parts.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,w:6+Math.random()*8,h:10+Math.random()*10,vy:2+Math.random()*3.5,vx:-1.5+Math.random()*3,r:Math.random()*6,vr:-.2+Math.random()*.4,c:cols[i%cols.length]});
+  if(!raf) loop();
+}
+function loop(){
+  cctx.clearRect(0,0,cv.width,cv.height);
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;cctx.save();cctx.translate(p.x,p.y);cctx.rotate(p.r);cctx.fillStyle=p.c;cctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cctx.restore()});
+  parts=parts.filter(p=>p.y<cv.height+30);
+  if(parts.length){raf=requestAnimationFrame(loop)}else{raf=null;cctx.clearRect(0,0,cv.width,cv.height)}
+}
+
+/* ---------- শুরু: শেয়ার করা লিংক হলে সরাসরি কার্ড খুলবে ---------- */
+updateForm();
+const q=new URLSearchParams(location.search);
+if(q.get("name")){
+  const occ=OCC[q.get("occ")]?q.get("occ"):"birthday";
+  data={name:q.get("name").slice(0,40),occ,dob:q.get("dob")||""};
+  document.querySelector('.tabs button[data-t="age"]').click();
+  root.classList.add("on");
+  pickText();render(true);
+}
+})();
 </script>
 </body>
 </html>
