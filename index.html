@@ -1381,5 +1381,565 @@ render();
 }catch(err){console.error('ব্যবসায়িক পণ্য হিসাব:',err)}
 })();
 </script>
-</body>
-</html>
+<!-- ===================================================================
+     নতুন ফিচার: কারেন্সি • ছাড়-ভ্যাট • কাপড়ের মাপ • সঞ্চয় • ১০টি ব্যবসায়িক ক্যালকুলেটর • ডার্ক/লাইট মোড
+     (পুরনো কোড অপরিবর্তিত; এই অংশ সবার শেষে যোগ করা হয়েছে)
+     =================================================================== -->
+<style id="nf-style">
+:root{--sb:#2a3a55;--sf:#fff;--mut:#94a3b8;--pos:#34d399;--neg:#f87171;--bd:#1e293b;--big:#38bdf8}
+body.light{--sb:#dbe4f0;--sf:#0f172a;--mut:#475569;--pos:#047857;--neg:#b91c1c;--bd:#cbd5e1;--big:#0369a1}
+.big{color:var(--big)}
+
+/* ---- থিম বাটন ---- */
+#themeBtn{position:absolute;top:14px;left:14px;height:30px;width:40px;padding:0;font-size:15px;border-radius:10px;background:#0f172a;color:#fff}
+
+/* ---- নতুন কম্পোনেন্ট ---- */
+.nf-green{background:#047857}
+.nf-red{background:#7f1d1d}
+.nf-sub{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:4px}
+.nf-sub.c3{grid-template-columns:repeat(3,1fr)}
+.nf-sub button{height:40px;font-size:13px;line-height:1.2;padding:0 4px;background:var(--sb);color:var(--sf)}
+.nf-sub button.on{background:#b45309;color:#fff}
+.nf-sec{scroll-margin-top:8px}
+.nf-cap{font-size:13px;color:var(--mut);min-height:18px}
+.nf-s{font-size:26px}
+.nf-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nf-three{display:grid;grid-template-columns:1.6fr .8fr 1fr;gap:8px}
+.nf-pos,.line b.nf-pos{color:var(--pos)}
+.nf-neg,.line b.nf-neg{color:var(--neg)}
+.big.nf-pos{color:var(--pos)}
+.big.nf-neg{color:var(--neg)}
+.nf-it{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:10px 0;border-top:1px solid var(--bd)}
+.nf-it:first-child{border-top:0}
+.nf-it .nm{font-weight:600;word-break:break-word}
+.nf-it small{display:block;color:var(--mut);margin-top:3px;line-height:1.5}
+.nf-it b{white-space:nowrap}
+.nf-it .nf-x{height:34px;width:34px;font-size:14px;background:#7f1d1d;color:#fff;padding:0;flex:none}
+
+/* ---- লাইট মোড ---- */
+body.light{background:#e2e8f0;color:#0f172a}
+body.light .app{background:#fff;box-shadow:0 10px 40px rgba(15,23,42,.18)}
+body.light h2{color:#0369a1}
+body.light h2 span{color:#b45309}
+body.light #themeBtn{background:#e2e8f0;color:#0f172a}
+body.light .tabs{background:#e2e8f0}
+body.light .tabs button{color:#334155}
+body.light .tabs button.on{background:#2563eb;color:#fff}
+body.light .tabs button[data-t="biz"]{background:#14532d;color:#fff}
+body.light .tabs button[data-t="biz"].on{background:#059669}
+body.light .screen{background:#f1f5f9}
+body.light #expr{color:#0f172a}
+body.light #res,body.light #c-out{color:#0369a1}
+body.light #res.err{color:#dc2626}
+body.light #heard{color:#b45309}
+body.light .sci button,body.light .buttons button{background:#e2e8f0;color:#0f172a}
+body.light .buttons .operator{background:#2563eb;color:#fff}
+body.light .buttons .clear{background:#dc2626;color:#fff}
+body.light .buttons .back{background:#d97706;color:#fff}
+body.light .buttons .equal{background:#059669;color:#fff}
+body.light .mini{background:#e2e8f0;color:#0f172a}
+body.light .chips button{background:#dbe4f0;color:#0f172a}
+body.light .chips button.on{background:#d97706;color:#fff}
+body.light .swap{background:#dbe4f0;color:#0f172a}
+body.light #hist{background:#fff}
+body.light #hist div{border-bottom-color:#cbd5e1}
+body.light #hist small{color:#475569}
+body.light #hist b{color:#0369a1}
+body.light label{color:#475569}
+body.light .in{background:#fff;color:#0f172a;border-color:#cbd5e1}
+body.light .in:focus{border-color:#d97706;box-shadow:0 0 0 2px #d97706}
+body.light .card{background:#f1f5f9}
+body.light .line{border-top-color:#cbd5e1}
+body.light .line b{color:#b45309}
+body.light .line b.nf-pos{color:var(--pos)}
+body.light .line b.nf-neg{color:var(--neg)}
+body.light .pbar{background:#cbd5e1}
+body.light .legend,body.light .note{color:#475569}
+body.light [style*="94a3b8"]{color:#475569!important}
+body.light input[type=date]{color-scheme:light}
+body.light #p-biz .pos{color:#047857}
+body.light #p-biz .neg{color:#dc2626}
+body.light #p-biz .it{border-top-color:#cbd5e1}
+body.light #p-biz .it small{color:#475569}
+body.light #p-biz .acts button{background:#dbe4f0;color:#0f172a}
+</style>
+
+<script>
+(function(){
+try{
+const BN='০১২৩৪৫৬৭৮৯';
+const $=id=>document.getElementById(id);
+const num=s=>parseFloat(String(s).replace(/[০-৯]/g,d=>BN.indexOf(d)).replace(/,/g,'').trim());
+const fm=(x,d=2)=>Number(x).toLocaleString('en-IN',{maximumFractionDigits:d});
+const T=x=>'৳ '+fm(x);
+const v=id=>num($(id).value);
+const ov=id=>{const x=v(id);return isNaN(x)?0:x};
+const MON=['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+const tabs=document.querySelector('.tabs'),app=document.querySelector('.app'),histEl=$('hist');
+if(!tabs||!app)return;
+const bizBtn=tabs.querySelector('button[data-t="biz"]');
+
+/* ---------- ছোট হেল্পার ---------- */
+function row(box,k,val,cls){
+  const r=document.createElement('div');r.className='line';
+  const s=document.createElement('span');s.textContent=k;
+  const b=document.createElement('b');b.textContent=val;if(cls)b.className=cls;
+  r.append(s,b);box.append(r);
+}
+const F=(id,lab,ph)=>`<label>${lab}</label><input class="in" id="${id}" inputmode="decimal" placeholder="${ph||''}" autocomplete="off">`;
+const TX=(id,lab,ph)=>`<label>${lab}</label><input class="in" id="${id}" placeholder="${ph||''}" maxlength="60" autocomplete="off">`;
+const S=(id,lab,opts)=>`<label>${lab}</label><select class="in" id="${id}">${opts.map((o,i)=>`<option value="${i}">${o}</option>`).join('')}</select>`;
+const RES=(p,extra)=>`<div class="card"><div class="nf-cap" id="${p}-cap"></div><div class="big nf-s" id="${p}-out">—</div><div id="${p}-det"></div>${extra||''}</div>`;
+function show(p,cap,big,rows,cls){
+  $(p+'-cap').textContent=cap||'';
+  const o=$(p+'-out');o.textContent=big;o.className='big nf-s'+(cls?' '+cls:'');
+  const d=$(p+'-det');d.innerHTML='';
+  (rows||[]).forEach(r=>row(d,r[0],r[1],r[2]));
+}
+const none=(p,msg)=>show(p,msg||'','—',[]);
+function copyTxt(txt,btn){
+  const done=()=>{const o=btn.textContent;btn.textContent='✓ কপি হয়েছে';setTimeout(()=>btn.textContent=o,1500)};
+  const fb=()=>{const a=document.createElement('textarea');a.value=txt;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove();done()};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done).catch(fb);else fb();
+}
+const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fmtD=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');return m?(+m[3])+' '+MON[+m[2]-1]+' '+m[1]:''};
+
+/* ---------- নতুন ট্যাব বানানো ---------- */
+function mkTab(key,label,html){
+  const b=document.createElement('button');b.dataset.t=key;b.innerHTML=label;
+  tabs.insertBefore(b,bizBtn||null);
+  const p=document.createElement('div');p.className='pane';p.id='p-'+key;p.innerHTML=html;
+  if(histEl)app.insertBefore(p,histEl);else app.appendChild(p);
+  b.onclick=()=>{
+    try{tab=key}catch(e){}
+    document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+    document.querySelectorAll('.pane').forEach(q=>q.classList.toggle('on',q===p));
+    if(histEl)histEl.classList.remove('show');
+    if(p._onopen)p._onopen();
+  };
+  return p;
+}
+/* সাব-ট্যাব (বাটনের সারি + একেক সময়ে একটি সেকশন) */
+function hub(root,list,cols){
+  const bar=document.createElement('div');bar.className='nf-sub'+(cols===3?' c3':'');root.append(bar);
+  const items=[];
+  function open(i,scroll){
+    items.forEach((x,j)=>{x.b.classList.toggle('on',i===j);x.s.style.display=i===j?'block':'none'});
+    const x=items[i];if(x.it.i&&!x.inited){x.inited=true;x.it.i()}
+    if(x.s._calc)x.s._calc();
+    if(scroll&&x.s.scrollIntoView)x.s.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  list.forEach((it,i)=>{
+    const b=document.createElement('button');b.textContent=it.t;bar.append(b);
+    const s=document.createElement('div');s.className='nf-sec';s.innerHTML=it.h;s.style.display='none';root.append(s);
+    s._calc=it.c;items.push({it,b,s});
+    b.onclick=()=>open(i,true);
+  });
+  const dispatch=e=>{const s=e.target.closest&&e.target.closest('.nf-sec');if(s&&s._calc)s._calc()};
+  root.addEventListener('input',dispatch);root.addEventListener('change',dispatch);
+  open(0,false);
+}
+
+/* =====================================================================
+   ডার্ক / লাইট মোড
+   ===================================================================== */
+const tbtn=document.createElement('button');tbtn.id='themeBtn';
+app.insertBefore(tbtn,app.firstChild);
+let meta=document.querySelector('meta[name="theme-color"]');
+if(!meta){meta=document.createElement('meta');meta.name='theme-color';document.head.appendChild(meta)}
+function setTheme(light){
+  document.body.classList.toggle('light',light);
+  tbtn.textContent=light?'🌙':'☀️';
+  tbtn.title=light?'ডার্ক মোড':'লাইট মোড';
+  meta.content=light?'#e2e8f0':'#101827';
+  try{localStorage.setItem('sc_theme',light?'light':'dark')}catch(e){}
+}
+tbtn.onclick=()=>setTheme(!document.body.classList.contains('light'));
+let savedTheme=null;try{savedTheme=localStorage.getItem('sc_theme')}catch(e){}
+setTheme(savedTheme==='light');
+
+/* =====================================================================
+   🌍 লাইভ কারেন্সি কনভার্টার
+   ===================================================================== */
+(function(){
+const CUR=[['BDT','বাংলাদেশি টাকা',122],['USD','মার্কিন ডলার',1],['EUR','ইউরো',.92],['GBP','ব্রিটিশ পাউন্ড',.79],
+['SAR','সৌদি রিয়াল',3.75],['AED','UAE দিরহাম',3.6725],['KWD','কুয়েতি দিনার',.307],['QAR','কাতারি রিয়াল',3.64],
+['OMR','ওমানি রিয়াল',.385],['BHD','বাহরাইনি দিনার',.376],['INR','ভারতীয় রুপি',84],['PKR','পাকিস্তানি রুপি',278],
+['NPR','নেপালি রুপি',134],['LKR','শ্রীলঙ্কান রুপি',300],['MYR','মালয়েশিয়ান রিঙ্গিত',4.4],['SGD','সিঙ্গাপুর ডলার',1.34],
+['JPY','জাপানি ইয়েন',150],['CNY','চীনা ইউয়ান',7.2],['KRW','দক্ষিণ কোরিয়ান ওন',1350],['THB','থাই বাত',35],
+['AUD','অস্ট্রেলিয়ান ডলার',1.52],['CAD','কানাডিয়ান ডলার',1.37],['CHF','সুইস ফ্র্যাঙ্ক',.88],['TRY','তুর্কি লিরা',34],
+['RUB','রুশ রুবল',92],['IDR','ইন্দোনেশিয়ান রুপিয়া',15800],['ZAR','দক্ষিণ আফ্রিকান র‍্যান্ড',18]];
+const URLS=['https://open.er-api.com/v6/latest/USD','https://api.exchangerate-api.com/v4/latest/USD',
+ 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json'];
+const p=mkTab('cur','🌍<br>কারেন্সি',
+ `<label style="margin-top:0">পরিমাণ</label><input class="in" id="cu-v" inputmode="decimal" value="1" autocomplete="off">
+  <label>থেকে</label><select class="in" id="cu-f"></select>
+  <button class="swap" id="cu-sw">⇅</button>
+  <label style="margin-top:4px">এতে</label><select class="in" id="cu-t"></select>
+  <div class="card">
+    <div class="nf-cap" id="cu-st"></div>
+    <div class="big nf-s" id="cu-out" style="margin-top:8px">—</div>
+    <div class="nf-cap" id="cu-rate"></div>
+    <div id="cu-list" style="margin-top:6px"></div>
+  </div>
+  <button class="wide nf-green" id="cu-ref">🔄 লাইভ রেট আপডেট করুন</button>
+  <div class="note">রেট সূত্র: open.er-api.com (ExchangeRate-API)। ব্যাংক বা মানি-এক্সচেঞ্জের ক্রয়-বিক্রয় রেট থেকে সামান্য আলাদা হতে পারে। ইন্টারনেট না থাকলে সর্বশেষ সংরক্ষিত বা আনুমানিক রেট দেখাবে।</div>`);
+CUR.forEach(([c,n])=>['cu-f','cu-t'].forEach(id=>{const o=document.createElement('option');o.value=c;o.textContent=c+' — '+n;$(id).append(o)}));
+$('cu-f').value='USD';$('cu-t').value='BDT';
+let live=null,liveOk=false,loading=false;
+try{const c=JSON.parse(localStorage.getItem('sc_fx')||'null');if(c&&c.rates&&c.rates.BDT>0)live=c}catch(e){}
+const rates=()=>{const r={};CUR.forEach(([c,,f])=>r[c]=f);if(live)for(const c in r)if(live.rates[c]>0)r[c]=live.rates[c];return r};
+const when=ts=>{try{return new Date(ts).toLocaleString('bn-BD',{dateStyle:'medium',timeStyle:'short'})}catch(e){return new Date(ts).toLocaleString()}};
+const cd=x=>Math.abs(x)<1?6:4;
+function status(){
+  const st=$('cu-st');
+  if(loading)st.textContent='⏳ লাইভ রেট আনা হচ্ছে…';
+  else if(liveOk&&live)st.textContent='🟢 লাইভ রেট • আপডেট: '+when(live.ts);
+  else if(live)st.textContent='🟡 লাইভ রেট আনা যায়নি — সর্বশেষ সংরক্ষিত রেট দেখানো হচ্ছে ('+when(live.ts)+')';
+  else st.textContent='🟠 ইন্টারনেট নেই — আনুমানিক রেট দেখানো হচ্ছে। ইন্টারনেট চালু করে 🔄 চাপুন';
+}
+function conv(){
+  status();
+  const val=v('cu-v'),f=$('cu-f').value,t=$('cu-t').value,r=rates();
+  const out=$('cu-out'),list=$('cu-list'),rt=$('cu-rate');list.innerHTML='';
+  if(isNaN(val)){out.textContent='—';rt.textContent='';return}
+  const k=r[t]/r[f];
+  out.textContent=fm(val*k,cd(val*k))+' '+t;
+  rt.textContent='1 '+f+' = '+fm(k,cd(k))+' '+t;
+  ['BDT','USD','EUR','GBP','SAR','AED','INR','MYR','KWD','QAR'].filter(c=>c!==f).forEach(c=>{const x=val*r[c]/r[f];row(list,c,fm(x,cd(x)))});
+}
+async function pull(){
+  for(const u of URLS){
+    try{
+      const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),8000);
+      const r=await fetch(u,{signal:ctl.signal,cache:'no-store'});clearTimeout(to);
+      if(!r.ok)continue;
+      const j=await r.json();
+      let rt=j&&j.rates;
+      if(!rt&&j&&j.usd){rt={};for(const k in j.usd)rt[k.toUpperCase()]=j.usd[k]}
+      if(rt&&rt.BDT>0)return rt;
+    }catch(e){}
+  }
+  return null;
+}
+async function refresh(){
+  if(loading)return;
+  loading=true;status();
+  const rt=await pull();
+  loading=false;
+  if(rt){live={rates:rt,ts:Date.now()};liveOk=true;try{localStorage.setItem('sc_fx',JSON.stringify(live))}catch(e){}}
+  else liveOk=false;
+  conv();
+}
+$('cu-v').addEventListener('input',conv);
+['cu-f','cu-t'].forEach(id=>$(id).addEventListener('change',conv));
+$('cu-sw').onclick=()=>{const f=$('cu-f'),t=$('cu-t'),x=f.value;f.value=t.value;t.value=x;conv()};
+$('cu-ref').onclick=refresh;
+p._onopen=()=>{if(!loading&&(!liveOk||Date.now()-(live?live.ts:0)>36e5))refresh()};
+conv();refresh();
+})();
+
+/* =====================================================================
+   🏷️ ছাড় ও VAT ক্যালকুলেটর
+   ===================================================================== */
+(function(){
+mkTab('dv','🏷️<br>ছাড়-ভ্যাট',
+  S('dv-m','হিসাবের ধরন',['ছাড় দিয়ে VAT যোগ (ছাড়ের পরের দামের উপর VAT)','VAT-সহ দাম থেকে VAT আলাদা করা'])+
+  F('dv-p','দাম (৳)','যেমন: 1000')+
+  F('dv-q','পরিমাণ (ঐচ্ছিক, না দিলে ১)','যেমন: 2')+
+  `<div id="dv-w">${F('dv-d','ছাড় (%)','যেমন: 10')}</div>`+
+  F('dv-v','VAT (%)','যেমন: 15')+
+  RES('dv')+`<div class="note" id="dv-note"></div>`);
+function calc(){
+  const m=+$('dv-m').value;$('dv-w').style.display=m===0?'block':'none';
+  $('dv-note').textContent=m===0?'ছাড়ের পরের দামের উপর VAT ধরা হয়েছে।':'VAT ছাড়া দাম = VAT-সহ দাম ÷ (১ + VAT%)।';
+  const pr=v('dv-p'),d=ov('dv-d'),vt=ov('dv-v');let q=v('dv-q');if(isNaN(q))q=1;
+  if(!(pr>=0)||!(q>0)||d<0||d>100||vt<0)return none('dv');
+  if(m===0){
+    const base=pr*q,disc=base*d/100,after=base-disc,vat=after*vt/100,fin=after+vat;
+    show('dv','মোট প্রদেয়',T(fin),[
+      ['মূল দাম'+(q!==1?' ('+fm(q,3)+' × '+fm(pr)+')':''),T(base)],
+      ['ছাড় ('+fm(d)+'%)','− '+T(disc)],['ছাড়ের পর দাম',T(after)],
+      ['VAT ('+fm(vt)+'%)','+ '+T(vat)],['সর্বমোট',T(fin)]]);
+  }else{
+    const gross=pr*q,net=gross/(1+vt/100),vat=gross-net;
+    show('dv','VAT ছাড়া দাম',T(net),[['VAT-সহ দাম',T(gross)],['VAT ('+fm(vt)+'%)',T(vat)],['VAT ছাড়া দাম',T(net)]]);
+  }
+}
+const pane=$('p-dv');pane.addEventListener('input',calc);pane.addEventListener('change',calc);calc();
+})();
+
+/* =====================================================================
+   👔 কাপড়ের মাপ ক্যালকুলেটর
+   ===================================================================== */
+(function(){
+const CU=[['গজ',36],['হাত',18],['গিরা',2.25],['ইঞ্চি',1],['ফুট',12],['মিটার',39.37007874],['সেমি',0.3937007874]];
+const names=CU.map(x=>x[0]);
+function mixed(inch){
+  inch=Math.round(inch*1000)/1000;
+  const g=Math.floor(inch/36+1e-9);let r=inch-g*36;
+  const h=Math.floor(r/18+1e-9);r-=h*18;
+  const gi=Math.floor(r/2.25+1e-9);r-=gi*2.25;
+  r=Math.round(r*100)/100;
+  return [g?g+' গজ':'',h?h+' হাত':'',gi?gi+' গিরা':'',r?fm(r,2)+' ইঞ্চি':''].filter(Boolean).join(' ')||'0';
+}
+const p=mkTab('cloth','👔<br>কাপড়','');
+hub(p,[
+ {t:'🔄 মাপ রূপান্তর',
+  h:F('cl-v','দৈর্ঘ্য','যেমন: 7.5')+S('cl-f','যে মাপ থেকে',names)+S('cl-t','যে মাপে',names)+RES('cl')+
+    '<div class="note">১ গজ = ২ হাত = ১৬ গিরা = ৩৬ ইঞ্চি • ১ হাত = ৮ গিরা = ১৮ ইঞ্চি • ১ গিরা = ২.২৫ ইঞ্চি • ১ মিটার ≈ ১.০৯৩ গজ</div>',
+  i(){$('cl-f').value='1';$('cl-t').value='0'},
+  c(){
+    const val=v('cl-v'),f=+$('cl-f').value,t=+$('cl-t').value;
+    if(isNaN(val)||val<0)return none('cl');
+    const inch=val*CU[f][1];
+    show('cl',fm(val,4)+' '+CU[f][0]+' =',fm(inch/CU[t][1],4)+' '+CU[t][0],
+      CU.map(([n,u])=>[n,fm(inch/u,4)]).concat([['গজ-হাত-গিরা',mixed(inch)]]));
+  }},
+ {t:'💰 কাপড়ের দাম',
+  h:F('cp-l','মোট কাপড়ের পরিমাণ','যেমন: 6')+S('cp-u','পরিমাণের একক',names)+F('cp-r','দর (৳)','যেমন: 450')+S('cp-ru','দর কোন এককে (প্রতি…)',names)+RES('cp'),
+  i(){$('cp-u').value='1';$('cp-ru').value='0'},
+  c(){
+    const len=v('cp-l'),rate=v('cp-r'),u=+$('cp-u').value,ru=+$('cp-ru').value;
+    if(!(len>=0)||!(rate>=0))return none('cp');
+    const inch=len*CU[u][1],perInch=rate/CU[ru][1],total=inch*perInch;
+    show('cp','মোট দাম',T(total),[
+      ['মোট দৈর্ঘ্য',fm(inch/36,3)+' গজ • '+fm(inch/18,3)+' হাত'],
+      ['গজ-হাত-গিরা',mixed(inch)],
+      ['দর প্রতি গজ',T(perInch*36)],['দর প্রতি হাত',T(perInch*18)],['দর প্রতি মিটার',T(perInch*39.37007874)]]);
+  }},
+ {t:'✂️ কয় পিস হবে',
+  h:F('cs-t','মোট কাপড়','যেমন: 10')+S('cs-tu','মোট কাপড়ের একক',names)+F('cs-p','প্রতি পিসে লাগে','যেমন: 2.5')+S('cs-pu','প্রতি পিসের একক',names)+F('cs-r','কাপড়ের দর প্রতি গজ (ঐচ্ছিক ৳)','যেমন: 450')+RES('cs'),
+  i(){$('cs-tu').value='0';$('cs-pu').value='0'},
+  c(){
+    const tot=v('cs-t'),per=v('cs-p'),rate=v('cs-r'),tu=+$('cs-tu').value,pu=+$('cs-pu').value;
+    if(!(tot>=0)||!(per>0))return none('cs');
+    const ti=tot*CU[tu][1],pi=per*CU[pu][1],n=Math.floor(ti/pi+1e-9),left=Math.max(0,ti-n*pi);
+    const both=x=>{const g=fm(x/36,3)+' গজ',m=mixed(x);return m===g?g:g+' ('+m+')'};
+    const rows=[['প্রতি পিসে কাপড়',both(pi)],['ব্যবহৃত কাপড়',both(n*pi)],['বাকি কাপড়',both(left)]];
+    if(!isNaN(rate)&&rate>=0){rows.push(['প্রতি পিসে কাপড়ের খরচ',T(pi/36*rate)]);rows.push(['মোট কাপড়ের দাম',T(ti/36*rate)])}
+    show('cs','পোশাক তৈরি হবে',n+' পিস',rows);
+  }}
+],3);
+})();
+
+/* =====================================================================
+   🏦 সঞ্চয় ক্যালকুলেটর
+   ===================================================================== */
+(function(){
+const p=mkTab('sv','🏦<br>সঞ্চয়',
+  S('sv-k','হিসাবের ধরন',['মাসিক জমা থেকে ভবিষ্যৎ মূল্য','লক্ষ্য পূরণে মাসে কত জমাতে হবে'])+
+  `<div id="sv-w0">${F('sv-m','মাসিক জমা (৳)','যেমন: 5000')}</div>`+
+  `<div id="sv-w1">${F('sv-g','লক্ষ্যমাত্রা (৳)','যেমন: 1000000')}</div>`+
+  F('sv-i','শুরুতে এককালীন জমা (ঐচ্ছিক ৳)','যেমন: 20000')+
+  F('sv-r','বার্ষিক সুদের হার (%)','যেমন: 8')+
+  `<label>মেয়াদ</label><div class="row"><input class="in" id="sv-t" inputmode="decimal" placeholder="যেমন: 5" style="margin-top:0" autocomplete="off"><select class="in" id="sv-u" style="margin-top:0"><option value="y">বছর</option><option value="m">মাস</option></select></div>`+
+  RES('sv','<div class="pbar"><i id="sv-b1" style="background:#38bdf8;width:0"></i><i id="sv-b2" style="background:#fbbf24;width:0"></i></div><div class="legend"><span>🔵 জমা</span><span>🟡 সুদ</span></div>')+
+  `<div class="note">হিসাব: মাসিক চক্রবৃদ্ধি সুদ, প্রতি মাসের শুরুতে জমা। ব্যাংকের DPS/FDR-এ চক্রবৃদ্ধির নিয়ম (যেমন ত্রৈমাসিক), উৎসে কর ও আবগারি শুল্ক ভিন্ন হতে পারে, তাই ব্যাংকের হিসাবের সাথে সামান্য পার্থক্য হবে।</div>`);
+const bars=(a,b)=>{$('sv-b1').style.width=a+'%';$('sv-b2').style.width=b+'%'};
+function calc(){
+  const k=+$('sv-k').value;$('sv-w0').style.display=k===0?'block':'none';$('sv-w1').style.display=k===1?'block':'none';
+  let n=v('sv-t');if($('sv-u').value==='y')n*=12;n=Math.round(n);
+  const r=v('sv-r'),I=ov('sv-i');
+  if(!(n>=1)||isNaN(r)||r<0||I<0){none('sv');bars(0,0);return}
+  const i=r/1200,growth=Math.pow(1+i,n),fac=i===0?n:(growth-1)/i*(1+i);
+  const span=n+' মাস ('+fm(n/12,2)+' বছর)';
+  if(k===0){
+    const m=v('sv-m');if(!(m>=0)){none('sv');bars(0,0);return}
+    const fv=I*growth+m*fac,dep=I+m*n,intr=fv-dep;
+    show('sv','মেয়াদ শেষে মোট',T(fv),[['মাসিক জমা',T(m)],['এককালীন জমা',T(I)],['মেয়াদ',span],['মোট জমা',T(dep)],['মোট সুদ',T(intr)],['সর্বমোট',T(fv)]]);
+    bars(fv>0?dep/fv*100:0,fv>0?intr/fv*100:0);
+  }else{
+    const G=v('sv-g');if(!(G>0)){none('sv');bars(0,0);return}
+    const need=G-I*growth;
+    if(need<=0){show('sv','লক্ষ্য পূরণের জন্য মাসিক জমা',T(0),[['এককালীন জমা বাড়তে বাড়তে',T(I*growth)],['লক্ষ্যমাত্রা',T(G)],['মেয়াদ',span]]);bars(100,0);return}
+    const m=need/fac,dep=I+m*n,intr=G-dep;
+    show('sv','প্রতি মাসে জমা দিতে হবে',T(m),[['এককালীন জমা',T(I)],['মেয়াদ',span],['মোট জমা',T(dep)],['মোট সুদ',T(intr)],['লক্ষ্যমাত্রা',T(G)]]);
+    bars(G>0?dep/G*100:0,G>0?intr/G*100:0);
+  }
+}
+p.addEventListener('input',calc);p.addEventListener('change',calc);calc();
+})();
+
+/* =====================================================================
+   💼 ১০টি ব্যবসায়িক ক্যালকুলেটর
+   ===================================================================== */
+(function(){
+const p=mkTab('bh','💼<br>ব্যবসা','');
+
+/* ---- ব্যবসায়িক খরচ ও ইনভয়েসের সংরক্ষিত তালিকা ---- */
+let exp=[],inv=[];
+try{exp=JSON.parse(localStorage.getItem('sc_exp')||'[]')}catch(e){exp=[]}
+try{inv=JSON.parse(localStorage.getItem('sc_inv')||'[]')}catch(e){inv=[]}
+exp=(Array.isArray(exp)?exp:[]).filter(x=>x&&typeof x.n==='string'&&x.a>=0);
+inv=(Array.isArray(inv)?inv:[]).filter(x=>x&&typeof x.n==='string'&&x.q>0&&x.p>=0);
+const keep=()=>{try{localStorage.setItem('sc_exp',JSON.stringify(exp));localStorage.setItem('sc_inv',JSON.stringify(inv))}catch(e){}};
+
+/* ---- ইনভয়েস টেক্সট (কপি/শেয়ারের জন্য) ---- */
+let invText='';
+
+hub(p,[
+/* 1 ───────── Profit & Loss ───────── */
+{t:'📊 Profit & Loss',
+ h:F('pl-rev','মোট বিক্রয় / আয় (৳)','যেমন: 250000')+F('pl-cogs','পণ্যের ক্রয়মূল্য / উৎপাদন খরচ (৳)','যেমন: 160000')+F('pl-exp','অন্যান্য খরচ — ভাড়া, বেতন, বিদ্যুৎ ইত্যাদি (৳)','যেমন: 40000')+RES('pl'),
+ c(){
+  const r=v('pl-rev'),cg=ov('pl-cogs'),e=ov('pl-exp');
+  if(isNaN(r)||r<0)return none('pl');
+  const g=r-cg,n=g-e,cls=n>=0?'nf-pos':'nf-neg';
+  show('pl',n>=0?'নেট লাভ':'নেট ক্ষতি',T(Math.abs(n)),[
+    ['মোট বিক্রয়',T(r)],['পণ্যের খরচ','− '+T(cg)],
+    [g>=0?'গ্রস লাভ':'গ্রস ক্ষতি',T(Math.abs(g)),g>=0?'nf-pos':'nf-neg'],
+    ['অন্যান্য খরচ','− '+T(e)],[n>=0?'নেট লাভ':'নেট ক্ষতি',T(Math.abs(n)),cls],
+    ['গ্রস মার্জিন',r>0?fm(g/r*100)+' %':'—'],['নেট মার্জিন',r>0?fm(n/r*100)+' %':'—']],cls);
+ }},
+/* 2 ───────── Profit Margin ───────── */
+{t:'📈 Profit Margin',
+ h:S('pm-m','হিসাবের ধরন',['ক্রয় ও বিক্রয়মূল্য থেকে মার্জিন','ক্রয়মূল্য ও কাঙ্ক্ষিত মার্জিন থেকে বিক্রয়মূল্য'])+F('pm-c','ক্রয়মূল্য / খরচ (৳)','যেমন: 800')+
+   `<div id="pm-w0">${F('pm-s','বিক্রয়মূল্য (৳)','যেমন: 1000')}</div><div id="pm-w1">${F('pm-g','কাঙ্ক্ষিত মার্জিন (বিক্রয়ের %)','যেমন: 25')}</div>`+RES('pm')+
+   '<div class="note">মার্জিন = লাভ ÷ বিক্রয়মূল্য • মার্কআপ = লাভ ÷ ক্রয়মূল্য</div>',
+ c(){
+  const m=+$('pm-m').value;$('pm-w0').style.display=m===0?'block':'none';$('pm-w1').style.display=m===1?'block':'none';
+  const c=v('pm-c');if(!(c>=0))return none('pm');
+  if(m===0){
+    const s=v('pm-s');if(!(s>0))return none('pm');
+    const pr=s-c,cls=pr>=0?'nf-pos':'nf-neg';
+    show('pm',pr>=0?'লাভ':'ক্ষতি',T(Math.abs(pr)),[['ক্রয়মূল্য',T(c)],['বিক্রয়মূল্য',T(s)],['মার্জিন (বিক্রয়ের উপর)',fm(pr/s*100)+' %',cls],['মার্কআপ (ক্রয়ের উপর)',c>0?fm(pr/c*100)+' %':'—']],cls);
+  }else{
+    const g=v('pm-g');if(isNaN(g)||!(c>0))return none('pm');
+    if(g<0||g>=100)return none('pm','মার্জিন ০ থেকে ১০০-এর কম হতে হবে');
+    const s=c/(1-g/100),pr=s-c;
+    show('pm','প্রস্তাবিত বিক্রয়মূল্য',T(s),[['ক্রয়মূল্য',T(c)],['লাভ',T(pr)],['মার্জিন',fm(g)+' %'],['মার্কআপ',fm(pr/c*100)+' %']]);
+  }
+ }},
+/* 3 ───────── Markup ───────── */
+{t:'🏷️ Markup',
+ h:S('mk-m','হিসাবের ধরন',['ক্রয়মূল্য ও মার্কআপ % থেকে বিক্রয়মূল্য','ক্রয়মূল্য ও বিক্রয়মূল্য থেকে মার্কআপ %'])+F('mk-c','ক্রয়মূল্য (৳)','যেমন: 800')+
+   `<div id="mk-w0">${F('mk-k','মার্কআপ (ক্রয়মূল্যের %)','যেমন: 30')}</div><div id="mk-w1">${F('mk-s','বিক্রয়মূল্য (৳)','যেমন: 1040')}</div>`+RES('mk'),
+ c(){
+  const m=+$('mk-m').value;$('mk-w0').style.display=m===0?'block':'none';$('mk-w1').style.display=m===1?'block':'none';
+  const c=v('mk-c');if(!(c>0))return none('mk');
+  if(m===0){
+    const k=v('mk-k');if(isNaN(k)||k<0)return none('mk');
+    const s=c*(1+k/100),pr=s-c;
+    show('mk','বিক্রয়মূল্য',T(s),[['ক্রয়মূল্য',T(c)],['মার্কআপ',fm(k)+' %'],['লাভ',T(pr)],['মার্জিন (বিক্রয়ের উপর)',fm(pr/s*100)+' %']]);
+  }else{
+    const s=v('mk-s');if(isNaN(s)||s<0)return none('mk');
+    const pr=s-c,k=pr/c*100,cls=pr>=0?'nf-pos':'nf-neg';
+    show('mk','মার্কআপ',fm(k)+' %',[['ক্রয়মূল্য',T(c)],['বিক্রয়মূল্য',T(s)],[pr>=0?'লাভ':'ক্ষতি',T(Math.abs(pr)),cls],['মার্জিন (বিক্রয়ের উপর)',s>0?fm(pr/s*100)+' %':'—']],cls);
+  }
+ }},
+/* 4 ───────── Discount ───────── */
+{t:'💸 Discount',
+ h:F('dc-p','মূল বিক্রয়মূল্য (৳)','যেমন: 1000')+F('dc-d','ছাড় (%)','যেমন: 10')+F('dc-e','দ্বিতীয় ছাড় % (ঐচ্ছিক)','যেমন: 5')+F('dc-c','ক্রয়মূল্য (ঐচ্ছিক — ছাড়ের পরে লাভ দেখতে)','যেমন: 700')+RES('dc'),
+ c(){
+  const pr=v('dc-p'),d=v('dc-d'),e=ov('dc-e'),cs=v('dc-c');
+  if(!(pr>=0)||isNaN(d))return none('dc');
+  if(d<0||d>100||e<0||e>100)return none('dc','ছাড় ০ থেকে ১০০ শতাংশের মধ্যে হতে হবে');
+  const a1=pr*(1-d/100),a2=a1*(1-e/100),tot=pr-a2;
+  const rows=[['মূল দাম',T(pr)],['প্রথম ছাড় ('+fm(d)+'%)','− '+T(pr-a1)]];
+  if(e>0)rows.push(['দ্বিতীয় ছাড় ('+fm(e)+'%)','− '+T(a1-a2)]);
+  rows.push(['মোট ছাড়',T(tot)+(pr>0?' ('+fm(tot/pr*100)+'%)':'')]);
+  if(cs>=0){const lp=a2-cs;rows.push([lp>=0?'ছাড়ের পরে লাভ':'ছাড়ের পরে ক্ষতি',T(Math.abs(lp)),lp>=0?'nf-pos':'nf-neg']);if(a2>0)rows.push(['ছাড়ের পরে মার্জিন',fm(lp/a2*100)+' %']);}
+  show('dc','ছাড়ের পর দাম',T(a2),rows);
+ }},
+/* 5 ───────── Commission ───────── */
+{t:'🤝 Commission',
+ h:F('cm-s','মোট বিক্রয় (৳)','যেমন: 200000')+F('cm-r','কমিশনের হার (%)','যেমন: 5')+F('cm-f','নির্দিষ্ট বোনাস (ঐচ্ছিক ৳)','যেমন: 500')+F('cm-t','লক্ষ্যমাত্রা (ঐচ্ছিক ৳)','যেমন: 150000')+F('cm-r2','লক্ষ্যমাত্রা ছাড়ালে নতুন হার % (ঐচ্ছিক)','যেমন: 8')+RES('cm')+
+   '<div class="note">লক্ষ্যমাত্রা ও নতুন হার দিলে: লক্ষ্য পর্যন্ত বিক্রয়ে প্রথম হার, তার উপরের অংশে নতুন হার।</div>',
+ c(){
+  const s=v('cm-s'),r=v('cm-r'),f=ov('cm-f'),t=ov('cm-t'),r2=v('cm-r2');
+  if(!(s>=0)||isNaN(r)||r<0)return none('cm');
+  const tier=t>0&&!isNaN(r2)&&r2>=0;
+  const base=tier?Math.min(s,t)*r/100+Math.max(0,s-t)*r2/100:s*r/100;
+  const tot=base+f;
+  const rows=[['মোট বিক্রয়',T(s)],['কমিশন'+(tier?' (স্তরভিত্তিক)':' ('+fm(r)+'%)'),T(base)]];
+  if(f>0)rows.push(['নির্দিষ্ট বোনাস',T(f)]);
+  rows.push(['মোট কমিশন',T(tot)]);rows.push(['কমিশন বাদে বিক্রয়',T(s-tot)]);
+  if(s>0)rows.push(['কার্যকর কমিশন হার',fm(tot/s*100)+' %']);
+  show('cm','মোট কমিশন',T(tot),rows);
+ }},
+/* 6 ───────── Product Pricing ───────── */
+{t:'🏭 Product Pricing',
+ h:F('pp-c','কাঁচামাল / ক্রয়মূল্য প্রতি ইউনিট (৳)','যেমন: 500')+F('pp-l','শ্রম / অন্যান্য সরাসরি খরচ (৳)','যেমন: 100')+F('pp-o','ওভারহেড প্রতি ইউনিট — ভাড়া, বিদ্যুৎ ইত্যাদি (৳)','যেমন: 50')+
+   S('pp-k','লাভ কীভাবে ধরবেন',['মার্জিন (বিক্রয়মূল্যের %)','মার্কআপ (খরচের %)'])+F('pp-m','কাঙ্ক্ষিত লাভ (%)','যেমন: 25')+F('pp-v','VAT % (ঐচ্ছিক)','যেমন: 15')+RES('pp'),
+ c(){
+  const cost=ov('pp-c')+ov('pp-l')+ov('pp-o'),k=+$('pp-k').value,m=v('pp-m'),vt=ov('pp-v');
+  if(!(cost>0)||isNaN(m)||m<0||vt<0)return none('pp');
+  if(k===0&&m>=100)return none('pp','মার্জিন ১০০%-এর কম হতে হবে');
+  const pr=k===0?cost/(1-m/100):cost*(1+m/100),gain=pr-cost,vat=pr*vt/100;
+  const rows=[['মোট ইউনিট খরচ',T(cost)],['বিক্রয়মূল্য (VAT ছাড়া)',T(pr)],['লাভ প্রতি ইউনিট',T(gain)],['মার্জিন',fm(gain/pr*100)+' %'],['মার্কআপ',fm(gain/cost*100)+' %']];
+  if(vt>0){rows.push(['VAT ('+fm(vt)+'%)',T(vat)]);rows.push(['VAT-সহ মূল্য',T(pr+vat)])}
+  show('pp',vt>0?'ক্রেতার জন্য মূল্য (VAT-সহ)':'প্রস্তাবিত বিক্রয়মূল্য',T(pr+vat),rows);
+ }},
+/* 7 ───────── Business Expense ───────── */
+{t:'🧾 Business Expense',
+ h:TX('ex-n','খরচের নাম','যেমন: দোকান ভাড়া')+F('ex-a','পরিমাণ (৳)','যেমন: 15000')+
+   '<button class="wide nf-green" id="ex-add">➕ খরচ যোগ করুন</button>'+
+   '<div class="card"><div class="nf-cap">খরচের তালিকা</div><div id="ex-list"></div></div>'+
+   F('ex-i','মাসিক আয় (ঐচ্ছিক ৳)','যেমন: 80000')+RES('ex')+
+   '<button class="wide nf-red" id="ex-clear">🗑 সব মুছুন</button>'+
+   '<div class="note">খরচগুলো মাসিক ধরে বার্ষিক ও দৈনিক গড় দেখানো হয়েছে (মাস = ৩০ দিন)।</div>',
+ i(){
+  $('ex-add').onclick=()=>{
+    const a=v('ex-a');if(!(a>0)){alert('খরচের পরিমাণ লিখুন');return}
+    const n=$('ex-n').value.trim()||('খরচ '+(exp.length+1));
+    exp.push({n,a});keep();$('ex-n').value='';$('ex-a').value='';$('ex-n').focus();drawExp();
+  };
+  $('ex-clear').onclick=()=>{if(exp.length&&confirm('সব খরচ মুছে ফেলবেন?')){exp=[];keep();drawExp()}};
+  drawExp();
+ },
+ c(){calcExp()}},
+/* 8 ───────── Partnership Profit Sharing ───────── */
+{t:'👥 Partnership',
+ h:F('ps-p','মোট লাভ / ক্ষতির পরিমাণ (৳)','যেমন: 120000')+S('ps-k','ধরন',['লাভ','ক্ষতি'])+S('ps-m','ভাগের নিয়ম',['বিনিয়োগ অনুযায়ী','নির্দিষ্ট অনুপাত (যেমন ৩:২:১)'])+
+   '<div id="ps-rows"></div>'+
+   '<div class="nf-two" style="margin-top:10px"><button class="nf-green" id="ps-add" style="height:44px;font-size:15px;color:#fff">➕ পার্টনার</button><button class="nf-red" id="ps-rm" style="height:44px;font-size:15px;color:#fff">➖ বাদ দিন</button></div>'+RES('ps'),
+ i(){
+  psRows(2);
+  $('ps-add').onclick=()=>{if(psN<10){psRows(psN+1);psCalc()}};
+  $('ps-rm').onclick=()=>{if(psN>2){psRows(psN-1);psCalc()}};
+ },
+ c(){psCalc()}},
+/* 9 ───────── Break-Even ───────── */
+{t:'⚖️ Break-Even',
+ h:F('be-f','মোট স্থির খরচ — ভাড়া, বেতন ইত্যাদি (৳)','যেমন: 50000')+F('be-p','বিক্রয়মূল্য প্রতি ইউনিট (৳)','যেমন: 200')+F('be-v','পরিবর্তনশীল খরচ প্রতি ইউনিট (৳)','যেমন: 120')+
+   F('be-t','কাঙ্ক্ষিত লাভ (ঐচ্ছিক ৳)','যেমন: 30000')+F('be-u','বর্তমান বিক্রয় ইউনিট (ঐচ্ছিক)','যেমন: 900')+RES('be'),
+ c(){
+  const f=v('be-f'),pr=v('be-p'),vc=ov('be-v'),tg=ov('be-t'),u=v('be-u');
+  if(isNaN(f)||f<0||!(pr>0))return none('be');
+  const cm=pr-vc;
+  if(cm<=0)return none('be','বিক্রয়মূল্য পরিবর্তনশীল খরচের চেয়ে বেশি হতে হবে');
+  const bu=f/cm,bur=Math.ceil(bu-1e-9);
+  const rows=[['প্রতি ইউনিটে অবদান',T(cm)],['অবদান অনুপাত',fm(cm/pr*100)+' %'],['সঠিক হিসাব',fm(bu,2)+' ইউনিট'],['ব্রেক-ইভেন বিক্রয় (টাকায়)',T(bur*pr)]];
+  if(tg>0){const tu=Math.ceil((f+tg)/cm-1e-9);rows.push([fm(tg,0)+' ৳ লাভের জন্য ইউনিট',fm(tu,0)]);rows.push(['তখন বিক্রয় (টাকায়)',T(tu*pr)])}
+  if(!isNaN(u)&&u>=0){
+    const pf=u*cm-f;rows.push([pf>=0?'এই বিক্রয়ে লাভ':'এই বিক্রয়ে ক্ষতি',T(Math.abs(pf)),pf>=0?'nf-pos':'nf-neg']);
+    if(u>0&&u>=bu)rows.push(['নিরাপদ মার্জিন',fm((u-bu)/u*100)+' %']);
+  }
+  show('be','ব্রেক-ইভেন পয়েন্ট',fm(bur,0)+' ইউনিট',rows);
+ }},
+/* 10 ───────── Invoice ───────── */
+{t:'🧮 Invoice',
+ h:TX('iv-n','গ্রাহকের নাম','যেমন: রহিম স্টোর')+TX('iv-no','ইনভয়েস নম্বর (ঐচ্ছিক)','যেমন: INV-001')+
+   '<label>তারিখ</label><input class="in" type="date" id="iv-dt">'+
+   '<label>পণ্য যোগ করুন (নাম • পরিমাণ • একক দাম)</label>'+
+   '<div class="nf-three"><input class="in" id="iv-in" placeholder="পণ্যের নাম" maxlength="60" autocomplete="off"><input class="in" id="iv-iq" inputmode="decimal" placeholder="পরিমাণ" autocomplete="off"><input class="in" id="iv-ip" inputmode="decimal" placeholder="দাম ৳" autocomplete="off"></div>'+
+   '<button class="wide nf-green" id="iv-add">➕ পণ্য যোগ করুন</button>'+
+   '<div class="card"><div class="nf-cap">ইনভয়েসের পণ্য</div><div id="iv-list"></div></div>'+
+   F('iv-d','ছাড় (%) — ঐচ্ছিক','যেমন: 5')+F('iv-v','VAT (%) — ঐচ্ছিক','যেমন: 5')+F('iv-paid','পরিশোধিত (৳) — ঐচ্ছিক','যেমন: 5000')+RES('iv')+
+   '<div class="nf-two" style="margin-top:14px"><button id="iv-copy" style="height:44px;font-size:15px;background:var(--sb);color:var(--sf)">📋 ইনভয়েস কপি</button><button id="iv-share" style="height:44px;font-size:15px;background:var(--sb);color:var(--sf)">📤 শেয়ার</button></div>'+
+   '<button class="wide nf-red" id="iv-clear">🗑 সব মুছুন</button>',
+ i(){
+  $('iv-dt').value=todayStr();
+  $('iv-add').onclick=()=>{
+    const q=v('iv-iq'),pr=v('iv-ip');
+    if(!(q>0)||!(pr>=0)){alert('পরিমাণ ও দাম ঠিকভাবে লিখুন');return}
+    const n=$('iv-in').value.trim()||('পণ্য '+(inv.length+1));
+    inv.push({n,q,p:pr});keep();
+    ['iv-in','iv-iq','iv-ip'].forEach(id=>$(id).value='');$('iv-in').focus();drawInv();
+  };
+  $('iv-clear').onclick=()=>{if(inv.length&&confirm('ইনভয়েসের সব পণ্য মুছে ফেলবেন?')){inv=[];keep();drawInv()}};
+  $('iv-copy').onclick=()=>{if(invText)copyTxt(invText,$('iv-copy'))};
+  if(!navigator.share)$('iv-share').style.display='none';
+  $('iv-share').onclick=()=>{if(invText&&navigator.share)navig
