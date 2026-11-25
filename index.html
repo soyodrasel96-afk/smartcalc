@@ -1942,4 +1942,121 @@ hub(p,[
   $('iv-clear').onclick=()=>{if(inv.length&&confirm('ইনভয়েসের সব পণ্য মুছে ফেলবেন?')){inv=[];keep();drawInv()}};
   $('iv-copy').onclick=()=>{if(invText)copyTxt(invText,$('iv-copy'))};
   if(!navigator.share)$('iv-share').style.display='none';
-  $('iv-share').onclick=()=>{if(invText&&navigator.share)navig
+  $('iv-share').onclick=()=>{if(invText&&navigator.share)navigator.share({title:'ইনভয়েস',text:invText}).catch(()=>{})};
+  drawInv();
+ },
+ c(){calcInv()}}
+],3);
+
+/* ---------- পার্টনারশিপ ---------- */
+let psN=2;
+function psRows(n){
+  const box=$('ps-rows');if(!box)return;
+  // আগের মানগুলো ধরে রাখা
+  const old=[];for(let i=0;i<psN;i++){const a=$('ps-n'+i),b=$('ps-w'+i);old.push([a?a.value:'',b?b.value:''])}
+  psN=n;box.innerHTML='';
+  const ratio=+$('ps-m').value===1;
+  for(let i=0;i<n;i++){
+    const d=document.createElement('div');d.className='nf-two';d.style.marginTop='8px';
+    const a=document.createElement('input');a.className='in';a.id='ps-n'+i;a.placeholder='পার্টনার '+(i+1)+' এর নাম';a.maxLength=40;a.autocomplete='off';
+    const b=document.createElement('input');b.className='in';b.id='ps-w'+i;b.setAttribute('inputmode','decimal');b.autocomplete='off';
+    b.placeholder=ratio?'অনুপাত (যেমন: 3)':'বিনিয়োগ ৳';
+    if(old[i]){a.value=old[i][0];b.value=old[i][1]}
+    d.append(a,b);box.append(d);
+  }
+}
+let psMode=0;
+function psCalc(){
+  if(!$('ps-out'))return;
+  const m=+$('ps-m').value;
+  if(m!==psMode){psMode=m;psRows(psN)}
+  const P=v('ps-p'),loss=+$('ps-k').value===1;
+  if(!(P>=0)||isNaN(P))return none('ps');
+  const ws=[],nm=[];
+  for(let i=0;i<psN;i++){
+    const w=v('ps-w'+i);ws.push(isNaN(w)||w<0?0:w);
+    nm.push(($('ps-n'+i).value||'').trim()||('পার্টনার '+(i+1)));
+  }
+  const tot=ws.reduce((s,x)=>s+x,0);
+  if(!(tot>0))return none('ps',m===1?'প্রত্যেকের অনুপাত লিখুন':'প্রত্যেকের বিনিয়োগ লিখুন');
+  const cls=loss?'nf-neg':'nf-pos';
+  const rows=ws.map((w,i)=>[nm[i]+' ('+fm(w/tot*100)+'%)',T(P*w/tot),cls]);
+  show('ps','মোট '+(loss?'ক্ষতি':'লাভ')+' ভাগ হলো',T(P),rows,cls);
+}
+
+/* ---------- খরচের তালিকা ---------- */
+function mkRow(nm,sub,onDel){
+  const d=document.createElement('div');d.className='nf-it';
+  const l=document.createElement('div');
+  const a=document.createElement('div');a.className='nm';a.textContent=nm;
+  const s=document.createElement('small');s.textContent=sub;
+  l.append(a,s);
+  const x=document.createElement('button');x.className='nf-x';x.textContent='✕';x.setAttribute('aria-label','মুছুন');x.onclick=onDel;
+  d.append(l,x);return d;
+}
+function drawExp(){
+  const box=$('ex-list');if(!box)return;
+  box.innerHTML='';
+  if(!exp.length){const e=document.createElement('div');e.className='note';e.textContent='এখনো কোনো খরচ যোগ করা হয়নি';box.append(e)}
+  exp.forEach((x,i)=>box.append(mkRow(x.n,T(x.a),()=>{exp.splice(i,1);keep();drawExp()})));
+  calcExp();
+}
+function calcExp(){
+  if(!$('ex-out'))return;
+  if(!exp.length)return none('ex','খরচ যোগ করুন');
+  const t=exp.reduce((s,x)=>s+x.a,0),inc=v('ex-i');
+  const rows=[['খরচের সংখ্যা',fm(exp.length,0)+' টি'],['বার্ষিক খরচ (১২ মাস)',T(t*12)],['দৈনিক গড় (৩০ দিন)',T(t/30)]];
+  let cls='';
+  if(!isNaN(inc)&&inc>=0){
+    const p=inc-t;cls=p>=0?'nf-pos':'nf-neg';
+    rows.push(['মাসিক আয়',T(inc)]);
+    rows.push([p>=0?'খরচের পর বাকি':'ঘাটতি',T(Math.abs(p)),cls]);
+    if(inc>0)rows.push(['আয়ের কত % খরচ',fm(t/inc*100)+' %']);
+  }
+  const big=exp.reduce((m,x)=>x.a>m.a?x:m,exp[0]);
+  rows.push(['সবচেয়ে বড় খরচ',big.n+' — '+T(big.a)]);
+  show('ex','মাসিক মোট খরচ',T(t),rows,cls);
+}
+
+/* ---------- ইনভয়েস ---------- */
+function drawInv(){
+  const box=$('iv-list');if(!box)return;
+  box.innerHTML='';
+  if(!inv.length){const e=document.createElement('div');e.className='note';e.textContent='এখনো কোনো পণ্য যোগ করা হয়নি';box.append(e)}
+  inv.forEach((x,i)=>box.append(mkRow(x.n,fm(x.q)+' × '+T(x.p)+' = '+T(x.q*x.p),()=>{inv.splice(i,1);keep();drawInv()})));
+  calcInv();
+}
+function calcInv(){
+  if(!$('iv-out'))return;
+  if(!inv.length){invText='';return none('iv','পণ্য যোগ করুন')}
+  const sub=inv.reduce((s,x)=>s+x.q*x.p,0);
+  const dp=ov('iv-d'),vp=ov('iv-v'),paid=ov('iv-paid');
+  const disc=sub*dp/100,after=sub-disc,vat=after*vp/100,total=after+vat,due=total-paid;
+  const rows=[['সাবটোটাল',T(sub)]];
+  if(dp>0)rows.push(['ছাড় ('+fm(dp)+'%)','− '+T(disc)]);
+  if(vp>0)rows.push(['VAT ('+fm(vp)+'%)','+ '+T(vat)]);
+  rows.push(['সর্বমোট',T(total)]);
+  if(paid>0){rows.push(['পরিশোধিত',T(paid)]);rows.push([due>0?'বাকি':(due<0?'ফেরত / অগ্রিম':'বাকি'),T(Math.abs(due)),due>0?'nf-neg':'nf-pos'])}
+  const no=($('iv-no').value||'').trim(),cu=($('iv-n').value||'').trim(),dt=fmtD($('iv-dt').value);
+  const L=['🧾 ইনভয়েস'];
+  if(no)L.push('নম্বর: '+no);
+  if(cu)L.push('গ্রাহক: '+cu);
+  if(dt)L.push('তারিখ: '+dt);
+  L.push('');
+  inv.forEach((x,i)=>L.push((i+1)+'. '+x.n+' — '+fm(x.q)+' × ৳'+fm(x.p)+' = ৳'+fm(x.q*x.p)));
+  L.push('','সাবটোটাল: ৳'+fm(sub));
+  if(dp>0)L.push('ছাড় ('+fm(dp)+'%): − ৳'+fm(disc));
+  if(vp>0)L.push('VAT ('+fm(vp)+'%): + ৳'+fm(vat));
+  L.push('সর্বমোট: ৳'+fm(total));
+  if(paid>0){L.push('পরিশোধিত: ৳'+fm(paid));L.push((due>0?'বাকি: ৳':'ফেরত/অগ্রিম: ৳')+fm(Math.abs(due)))}
+  L.push('','ধন্যবাদ — SmartCalc BD');
+  invText=L.join('\n');
+  show('iv','সর্বমোট',T(total),rows);
+}
+})();
+
+}catch(err){console.error('নতুন ফিচার:',err)}
+})();
+</script>
+</body>
+</html>
