@@ -2058,5 +2058,61 @@ function calcInv(){
 }catch(err){console.error('নতুন ফিচার:',err)}
 })();
 </script>
+<script>
+(function () {
+  var DICT = {
+    'হিসাব':'Calculate','কনভার্ট':'Convert','শতকরা':'Percentage','সুদ':'Interest',
+    'লাভ-ক্ষতি':'Profit-Loss','বয়স':'Age','তারিখ':'Date','কথায়':'In Words',
+    'কারেন্সি':'Currency','ছাড়-ভ্যাট':'Discount-VAT','কাপড়':'Cloth',
+    'সঞ্চয়':'Savings','ব্যবসা':'Business',
+    'ব্যবসায়িক পণ্য হিসাব':'Business Product Calc','বলুন':'Speak'
+    // এখানে বাকি বাংলা লেখা যোগ করুন:  'বাংলা':'English',
+  };
+  var D = '০১২৩৪৫৬৭৮৯';
+  var orig = new WeakMap(), out = new WeakMap();
+  var en = false, busy = false;
+  try { en = localStorage.getItem('sc_lang') === 'en'; } catch (e) {}
+
+  var btn = document.getElementById('langBtn');
+  if (!btn) return;
+
+  function tr(s) {
+    var t = s.trim(); if (!t) return s;
+    var r = DICT[t];
+    if (r === undefined) r = t.replace(/[০-৯]/g, function (d) { return D.indexOf(d); });
+    return s.replace(t, r);
+  }
+
+  function apply() {
+    busy = true; obs.disconnect();
+    var w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT), n;
+    while ((n = w.nextNode())) {
+      var p = n.parentNode;
+      if (p.closest('script,style') || btn.contains(n)) continue;
+      if (en) {
+        if (out.has(n) && out.get(n) === n.nodeValue) continue;
+        orig.set(n, n.nodeValue);
+        var t = tr(n.nodeValue); out.set(n, t); n.nodeValue = t;
+      } else if (orig.has(n) && out.get(n) === n.nodeValue) {
+        n.nodeValue = orig.get(n); orig.delete(n); out.delete(n);
+      }
+    }
+    btn.textContent = en ? '🌐 বাংলা' : '🌐 English';
+    document.documentElement.lang = en ? 'en' : 'bn';
+    obs.observe(document.body, {childList:true, subtree:true, characterData:true});
+    busy = false;
+  }
+
+  var obs = new MutationObserver(function () { if (!busy && en) apply(); });
+
+  btn.addEventListener('click', function () {
+    en = !en;
+    try { localStorage.setItem('sc_lang', en ? 'en' : 'bn'); } catch (e) {}
+    apply();
+  });
+
+  if (en) apply(); else obs.observe(document.body, {childList:true, subtree:true, characterData:true});
+})();
+</script>
 </body>
 </html>
